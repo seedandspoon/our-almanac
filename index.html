@@ -181,6 +181,7 @@
   .profile-block{ display:flex; flex-direction:column; align-items:center; text-align:center; padding:6px 16px 18px; gap:6px; }
   .profile-block .avatar{ width:84px; height:84px; font-size:28px; margin-bottom:4px; }
   .profile-block h1{ font-size:22px; font-weight:700; margin:0; }
+  .profile-name-input{ border:none; background:transparent; width:100%; max-width:280px; text-align:center; font-size:22px; font-weight:700; color:var(--ink); padding:2px 4px; font-family:inherit; }
   .profile-block .person-rel{ font-size:14.5px; color:var(--ink-soft); }
 
   .person-rel{ font-size:13px; color:var(--ink-faint); margin-top:2px; }
@@ -289,6 +290,8 @@ const ICON = {
   plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   chev:'<svg viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1.4 1.4 6.6 7l-5.2 5.6"/></svg>',
   chevBack:'<svg viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 1.4 1.4 7l5.2 5.6"/></svg>',
+  repeat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.6-5.7L20 8.5"/><path d="M20 4.5v4h-4"/><path d="M20 12a8 8 0 0 1-13.6 5.7L4 15.5"/><path d="M4 19.5v-4h4"/></svg>',
+  repeatFill:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.2a8.8 8.8 0 0 1 6.3 2.6l1-1a.6.6 0 0 1 1 .45v4.1a.6.6 0 0 1-.6.6h-4.1a.6.6 0 0 1-.42-1.03l1.2-1.2A6.6 6.6 0 0 0 5.6 12a1.1 1.1 0 1 1-2.2 0 8.8 8.8 0 0 1 8.6-8.8Z"/><path d="M12 20.8a8.8 8.8 0 0 1-6.3-2.6l-1 1a.6.6 0 0 1-1-.45v-4.1a.6.6 0 0 1 .6-.6h4.1a.6.6 0 0 1 .42 1.03l-1.2 1.2A6.6 6.6 0 0 0 18.4 12a1.1 1.1 0 1 1 2.2 0 8.8 8.8 0 0 1-8.6 8.8Z"/></svg>',
 };
 
 /* ============================== constants ============================== */
@@ -343,6 +346,8 @@ const RITUAL_TYPE_META = {
 
 const AVATAR_PALETTE = ['--accent','--autumn','--winter','--spring','--summer','--gold'];
 
+const RELATIONSHIP_TAGS = ['Mum','Dad','Sister','Brother','Daughter','Son','Grandma','Grandpa','Aunt','Uncle','Niece','Nephew','Cousin','Friend','Best friend','Partner'];
+
 /* ============================== state ============================== */
 
 let state = {
@@ -353,7 +358,7 @@ let state = {
   openMonths: new Set(),
   personDetailId: null,
   memoriesOpen: false,
-  ritualsOpen: false,
+  occasionPlan: null,
   ideaFilter: 'all',
   sheet: null,
   dismissedNudges: new Set(),
@@ -399,6 +404,9 @@ function esc(s){
   if(s===undefined||s===null) return '';
   return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+/* A single-quoted JS string literal, safe to splice into an onclick="..." (double-quoted)
+   HTML attribute — JSON.stringify's double quotes would close that attribute early. */
+function jsStr(s){ return "'" + String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'") + "'"; }
 function uid(prefix){ return prefix+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
 function pad2(n){ return String(n).padStart(2,'0'); }
 function todayDate(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
@@ -430,7 +438,7 @@ function itemNextDate(ev){
 function formatStamp(d){ return pad2(d.getDate())+' '+MONTHS_SHORT[d.getMonth()]; }
 function formatFullDate(iso){ if(!iso) return ''; const d=new Date(iso); return pad2(d.getDate())+' '+MONTHS_SHORT[d.getMonth()]+' '+d.getFullYear(); }
 
-function roughDistance(days){
+function roughDistance(days, targetDate){
   if(days<0) return 'passed';
   if(days===0) return 'today';
   if(days===1) return 'tomorrow';
@@ -438,7 +446,8 @@ function roughDistance(days){
   if(days<=30) return 'in about '+Math.round(days/7)+' weeks';
   if(days<=60) return 'in about a month';
   if(days<=180) return 'in a few months';
-  return 'later this year';
+  const isNextYear = targetDate && targetDate.getFullYear() > todayDate().getFullYear();
+  return isNextYear ? 'later next year' : 'later this year';
 }
 
 function periodLabel(ev){
@@ -483,6 +492,17 @@ function christmasYear(){
   return (now.getMonth()===11 && now.getDate()>25) ? y+1 : y;
 }
 function christmasOccasion(){ return 'Christmas '+christmasYear(); }
+
+function personBirthdayOccasion(person){
+  if(!person.birthday) return 'Birthday';
+  const {m,d} = parseISO(person.birthday);
+  return 'Birthday '+nextOccurrenceMD(m,d).getFullYear();
+}
+function personTurningAge(person){
+  if(!person.birthday) return null;
+  const {y,m,d} = parseISO(person.birthday);
+  return nextOccurrenceMD(m,d).getFullYear() - y;
+}
 
 /* build the unified events list: real items + synthetic birthdays */
 function allEvents(){
@@ -817,9 +837,9 @@ function render(){
   if(state.showSyncCodeOnBoot && !state.sheet){ state.showSyncCodeOnBoot = false; openSyncSheet(); }
   let body = '';
   if(state.memoriesOpen) body = renderMemories();
-  else if(state.ritualsOpen) body = renderRituals();
+  else if(state.occasionPlan) body = renderOccasionPlan();
   else if(state.view==='home') body = renderHome();
-  else if(state.view==='year') body = renderYear();
+  else if(state.view==='rituals') body = renderRituals();
   else if(state.view==='people') body = state.personDetailId ? renderPersonDetail(state.personDetailId) : renderPeople();
   else if(state.view==='gifts') body = renderGifts();
   else if(state.view==='ideas') body = renderIdeas();
@@ -858,55 +878,108 @@ function screenHead(navTitle, bigHtml, subHtml, extraHtml, leadHtml, trailHtml){
 function renderNav(){
   const items = [
     ['home','Home',ICON.home,ICON.homeFill],
-    ['year','Year',ICON.calendar,ICON.calendarFill],
-    ['people','People',ICON.people,ICON.peopleFill],
     ['gifts','Gifts',ICON.gift,ICON.giftFill],
+    ['rituals','Rituals',ICON.repeat,ICON.repeatFill],
     ['ideas','Someday',ICON.leaf,ICON.leafFill],
+    ['people','People',ICON.people,ICON.peopleFill],
   ];
   return '<nav class="bottomnav">'+items.map(([id,lb,ic,icFill])=>{
-    const active = state.view===id;
+    const active = state.view===id && !state.memoriesOpen && !state.occasionPlan;
     return '<button class="'+(active?'active':'')+'" onclick="goView(\''+id+'\')">'+(active?icFill:ic)+'<span class="lb">'+lb+'</span></button>';
   }).join('')+'</nav>';
 }
 
-window.goView = function(v){ state.view=v; state.personDetailId=null; state.memoriesOpen=false; state.ritualsOpen=false; render(); };
+window.goView = function(v){ state.view=v; state.personDetailId=null; state.memoriesOpen=false; state.occasionPlan=null; render(); };
 window.openMemories = function(){ state.memoriesOpen=true; render(); };
 window.closeMemories = function(){ state.memoriesOpen=false; render(); };
-window.openRituals = function(){ state.ritualsOpen=true; render(); };
-window.closeRituals = function(){ state.ritualsOpen=false; render(); };
 window.setIdeaFilter = function(f){ state.ideaFilter=f; render(); };
+
+/* ---------- occasion plan (birthday / Christmas gift planning for one person) ---------- */
+
+window.openOccasionPlan = function(personId, occasion, showAge){
+  state.occasionPlan = { personId, occasion, showAge: !!showAge };
+  render();
+};
+window.closeOccasionPlan = function(){ state.occasionPlan = null; render(); };
+window.useIdeaForOccasion = function(itemId){
+  updateItem(itemId, { occasion: state.occasionPlan.occasion });
+  toast('Moved to this occasion');
+};
+window.goToPersonProfile = function(id){
+  state.occasionPlan = null; state.memoriesOpen = false;
+  state.view = 'people'; state.personDetailId = id;
+  render();
+};
+
+function renderOccasionPlan(){
+  const { personId, occasion, showAge } = state.occasionPlan;
+  const p = personById(personId);
+  if(!p){ state.occasionPlan = null; return renderHome(); }
+  const wash = avatarColorVar(p);
+  const linked = state.items.filter(it=>it.kind==='gift' && (it.personIds||[]).includes(personId));
+  const forThis = linked.filter(it=>it.occasion===occasion);
+  const others = linked.filter(it=>it.occasion!==occasion);
+
+  let subLine = esc(occasion);
+  if(showAge){
+    const age = personTurningAge(p);
+    if(age!==null) subLine += ' · Turning '+age;
+  }
+
+  const lead = '<button onclick="closeOccasionPlan()">'+ICON.chevBack+'<span>Back</span></button>';
+  const trail = '<button onclick="goToPersonProfile(\''+personId+'\')">Profile</button>';
+
+  return '<div class="navbar"><div class="navbar-lead">'+lead+'</div><span class="navbar-title">'+esc(p.name)+'</span><div class="navbar-trail">'+trail+'</div></div>'
+    + '<div class="profile-block"><div class="avatar" style="background:var('+wash+')">'+esc(initials(p.name))+'</div>'
+    + '<h1>'+esc(p.name)+'</h1><div class="person-rel">'+subLine+'</div></div>'
+    + '<main>'
+    + '<section class="block"><div class="block-head"><span class="block-title">Gift ideas for this</span><button class="btn small" onclick="openItemSheet({mode:\'new\', personId:\''+personId+'\', kind:\'gift\', occasion:'+jsStr(occasion)+'})">+ Add</button></div>'
+    + (forThis.length ? '<div class="ios-group">'+forThis.map(renderEventCard).join('')+'</div>' : '<div class="empty">No ideas yet for this one — add one, or pick from below.</div>')
+    + '</section>'
+    + (others.length ? '<section class="block"><div class="block-head"><span class="block-title">Other ideas you\'ve saved for '+esc(firstName(p.name))+'</span></div><div class="ios-group">'+others.map(renderReusableIdeaRow).join('')+'</div></section>' : '')
+    + '</main>';
+}
+
+function renderReusableIdeaRow(it){
+  const meta = getKindMeta(it);
+  const colorVar = washVarFor(it);
+  const smeta = statusMetaFor(it.kind);
+  const statusTag = it.status && smeta[it.status] ? '<span class="tag">'+smeta[it.status].emoji+' '+smeta[it.status].label+'</span>' : '';
+  const occTag = it.occasion ? '<span class="tag">'+esc(it.occasion)+'</span>' : '';
+  return '<div class="ios-row" onclick="openItemSheet({mode:\'edit\', id:\''+it.id+'\'})">'
+    + '<div class="icon-sq" style="background:var('+colorVar+')">'+meta.emoji+'</div>'
+    + '<div class="row-content"><div class="row-text"><div class="row-title">'+esc(it.title)+'</div><div class="row-meta">'+statusTag+occTag+'</div></div>'
+    + '<div class="row-trail"><button class="plan-btn" onclick="event.stopPropagation(); useIdeaForOccasion(\''+it.id+'\')">Use this</button></div>'
+    + '</div></div>';
+}
 
 /* ============================== render: HOME ============================== */
 
 function renderHome(){
   const season = currentSeason();
   const sm = SEASON_META[season];
-  const events = allEvents().filter(e=>!isCompletedFor(e.kind, e.status));
-  const dated = events.filter(e=>e._daysUntil!==null && e._daysUntil>=-1);
-  dated.sort((a,b)=>a._daysUntil-b._daysUntil);
-  const memoryCount = state.items.filter(it=>isCompletedFor(it.kind, it.status)).length;
-  const ritualCount = state.items.filter(it=>it.kind==='ritual').length;
-
-  const next30 = dated.filter(e=>e._daysUntil<=30);
-  const laterSeason = dated.filter(e=>e._daysUntil>30 && SEASON_META[season].months.includes(monthOf(e))).slice(0,6);
-  const nextSeasonKey = SEASON_ORDER[(SEASON_ORDER.indexOf(season)+1)%4];
-  const lookingAhead = dated.filter(e=>SEASON_META[nextSeasonKey].months.includes(monthOf(e)) && e._daysUntil>0).slice(0,4);
-
+  const events = allEvents().filter(e=>e.dateType!=='someday' && !isCompletedFor(e.kind, e.status));
   const somedayNudge = pickNudge(season);
   const dateStamp = formatStamp(todayDate());
 
-  return screenHead('Home', sm.emoji+' '+greeting(), 'Here’s what the rhythm of your year looks like from today.', '', '', '<span>'+dateStamp+'</span>')
-    + '<main>'
-    + (somedayNudge ? renderNudge(somedayNudge, season) : '')
-    + renderEventSection('Next 30 days', next30, 'Nothing urgent — a quiet stretch ahead.')
-    + renderEventSection('Later this season', laterSeason, 'Nothing else marked for '+sm.label.toLowerCase()+' yet.')
-    + renderEventSection('Looking ahead — '+SEASON_META[nextSeasonKey].label, lookingAhead, '')
-    + '<section class="block"><div class="ios-group">'
-      + '<div class="ios-row" onclick="openRituals()"><div class="icon-sq" style="background:var(--accent)">🌿</div><div class="row-content"><div class="row-text"><div class="row-title">Rituals</div><div class="person-rel">The rhythms you keep every year</div></div><div class="row-trail"><span class="row-when">'+ritualCount+'</span><span class="chev">'+ICON.chev+'</span></div></div></div>'
-      + '<div class="ios-row" onclick="openMemories()"><div class="icon-sq" style="background:var(--ink-faint)">📖</div><div class="row-content"><div class="row-text"><div class="row-title">Memories</div><div class="person-rel">What you\'ve already lived, kept safe</div></div><div class="row-trail"><span class="row-when">'+(memoryCount ? memoryCount+' kept' : 'None yet')+'</span><span class="chev">'+ICON.chev+'</span></div></div></div>'
-      + '<div class="ios-row" onclick="openSyncSheet()"><div class="icon-sq" style="background:var(--winter)">🔗</div><div class="row-content"><div class="row-text"><div class="row-title">Sync</div><div class="person-rel">Keep your other devices showing the same almanac</div></div><div class="row-trail"><span class="chev">'+ICON.chev+'</span></div></div></div>'
-    + '</div></section>'
-    + '</main>';
+  const modeSwitch = '<div class="mode-switch">'
+    + '<button class="'+(state.yearMode==='seasons'?'active':'')+'" onclick="setYearMode(\'seasons\')">Seasons</button>'
+    + '<button class="'+(state.yearMode==='months'?'active':'')+'" onclick="setYearMode(\'months\')">Months</button>'
+    + '</div>';
+
+  const head = screenHead('Home', sm.emoji+' '+greeting(), 'Here’s your year ahead, from today.', modeSwitch, '', '<span>'+dateStamp+'</span>');
+
+  let main;
+  if(state.yearMode==='seasons'){
+    const order = rollFrom(SEASON_ORDER, SEASON_ORDER.indexOf(season));
+    main = order.map(s=>renderSeasonBlock(s, events, s===season)).join('');
+  } else {
+    const nowM = todayDate().getMonth()+1;
+    const monthsOrder = rollFrom([1,2,3,4,5,6,7,8,9,10,11,12], nowM-1);
+    main = monthsOrder.map(m=>renderMonthCard(m, events)).join('');
+  }
+
+  return head + '<main>' + (somedayNudge ? renderNudge(somedayNudge, season) : '') + main + '</main>';
 }
 
 function greeting(){
@@ -949,14 +1022,6 @@ window.startPlanning = function(id){
   }
 };
 
-function renderEventSection(title, list, emptyMsg){
-  if(!list.length && !emptyMsg) return '';
-  return '<section class="block">'
-    + '<div class="block-head"><span class="block-title">'+esc(title)+'</span></div>'
-    + (list.length ? '<div class="ios-group">'+list.map(renderEventCard).join('')+'</div>' : '<div class="empty">'+esc(emptyMsg)+'</div>')
-    + '</section>';
-}
-
 function renderEventCard(ev){
   const meta = getKindMeta(ev);
   const colorVar = washVarFor(ev);
@@ -968,8 +1033,14 @@ function renderEventCard(ev){
   const smeta = statusMetaFor(ev.kind);
   const statusTag = ev.status && smeta[ev.status] ? '<span class="tag">'+smeta[ev.status].emoji+' '+smeta[ev.status].label+'</span>' : '';
   const peopleTags = names.map(n=>'<span class="tag">'+esc(n)+'</span>').join('');
-  const dist = ev._daysUntil!==null ? roughDistance(ev._daysUntil) : '';
-  const openFn = ev.kind==='birthday' ? "goView('people')" : "openItemSheet({mode:'edit', id:'"+ev.id+"'})";
+  const dist = ev._daysUntil!==null ? roughDistance(ev._daysUntil, ev._nextDate) : '';
+  let openFn;
+  if(ev.kind==='birthday'){
+    const person = personById(ev.personIds[0]);
+    openFn = "openOccasionPlan('"+ev.personIds[0]+"', "+jsStr(person ? personBirthdayOccasion(person) : 'Birthday')+", true)";
+  } else {
+    openFn = "openItemSheet({mode:'edit', id:'"+ev.id+"'})";
+  }
   return '<div class="ios-row" onclick="'+openFn+'">'
     + '<div class="icon-sq" style="background:var('+colorVar+')">'+meta.emoji+'</div>'
     + '<div class="row-content">'
@@ -1018,30 +1089,7 @@ function renderMemoryCard(it){
     + '</div></div>';
 }
 
-/* ============================== render: YEAR ============================== */
-
-function renderYear(){
-  const season = currentSeason();
-  const events = allEvents().filter(e=>e.dateType!=='someday' && !isCompletedFor(e.kind, e.status));
-
-  const modeSwitch = '<div class="mode-switch">'
-    + '<button class="'+(state.yearMode==='seasons'?'active':'')+'" onclick="setYearMode(\'seasons\')">Seasons</button>'
-    + '<button class="'+(state.yearMode==='months'?'active':'')+'" onclick="setYearMode(\'months\')">Months</button>'
-    + '</div>';
-
-  const head = screenHead('Year', 'Your year ahead', 'Exact dates and loose seasons, side by side.', modeSwitch);
-
-  let main;
-  if(state.yearMode==='seasons'){
-    const order = rollFrom(SEASON_ORDER, SEASON_ORDER.indexOf(season));
-    main = order.map(s=>renderSeasonBlock(s, events, s===season)).join('');
-  } else {
-    const nowM = todayDate().getMonth()+1;
-    const monthsOrder = rollFrom([1,2,3,4,5,6,7,8,9,10,11,12], nowM-1);
-    main = monthsOrder.map(m=>renderMonthCard(m, events)).join('');
-  }
-  return head + '<main>' + main + '</main>';
-}
+/* ============================== render: year-ahead helpers (used by Home) ============================== */
 
 function rollFrom(arr, startIdx){ return arr.slice(startIdx).concat(arr.slice(0,startIdx)); }
 window.setYearMode = function(m){ state.yearMode=m; render(); };
@@ -1084,7 +1132,7 @@ function renderPeople(){
     if(p.birthday){
       const {m,d} = parseISO(p.birthday);
       const nd = nextOccurrenceMD(m,d);
-      next = roughDistance(daysBetween(todayDate(), nd));
+      next = roughDistance(daysBetween(todayDate(), nd), nd);
     }
     return '<div class="ios-row" onclick="openPerson(\''+p.id+'\')">'
       + '<div class="avatar" style="width:36px;height:36px;font-size:14px;background:var('+wash+')">'+esc(initials(p.name))+'</div>'
@@ -1092,60 +1140,107 @@ function renderPeople(){
       + '<div class="row-trail">'+(next ? '<span class="row-when">🎂 '+esc(next)+'</span>' : '')+'<span class="chev">'+ICON.chev+'</span></div></div>'
       + '</div>';
   }).join('');
+  const memoryCount = state.items.filter(it=>isCompletedFor(it.kind, it.status)).length;
+
   return head + '<main>'
     + '<section class="block"><div class="ios-group">'+(rows || '<div class="empty">No one saved yet.</div>')+'</div></section>'
-    + '<div class="btn-row"><button class="btn primary block" onclick="openPersonSheet({mode:\'new\'})">+ Add a person</button></div>'
+    + '<div class="btn-row"><button class="btn primary block" onclick="startNewPerson()">+ Add a person</button></div>'
+    + '<section class="block"><div class="block-head"><span class="block-title">App</span></div><div class="ios-group">'
+      + '<div class="ios-row" onclick="openMemories()"><div class="icon-sq" style="background:var(--ink-faint)">📖</div><div class="row-content"><div class="row-text"><div class="row-title">Memories</div><div class="person-rel">What you\'ve already lived, kept safe</div></div><div class="row-trail"><span class="row-when">'+(memoryCount ? memoryCount+' kept' : 'None yet')+'</span><span class="chev">'+ICON.chev+'</span></div></div></div>'
+      + '<div class="ios-row" onclick="openSyncSheet()"><div class="icon-sq" style="background:var(--winter)">🔗</div><div class="row-content"><div class="row-text"><div class="row-title">Sync</div><div class="person-rel">Keep your other devices showing the same almanac</div></div><div class="row-trail"><span class="chev">'+ICON.chev+'</span></div></div></div>'
+    + '</div></section>'
     + '</main>';
 }
 
 window.openPerson = function(id){ state.personDetailId=id; render(); };
+window.startNewPerson = async function(){
+  const id = await addPerson({ name:'', circle:'family' });
+  state.view='people'; state.personDetailId=id; render();
+};
 
 function renderPersonDetail(id){
   const p = personById(id);
   if(!p){ state.personDetailId=null; return renderPeople(); }
   const wash = avatarColorVar(p);
+  const fname = firstName(p.name) || 'them';
   const linked = state.items.filter(it=>(it.personIds||[]).includes(id));
   const memories = linked.filter(it=>isCompletedFor(it.kind, it.status));
-  const gifts = linked.filter(it=>it.kind==='gift' && it.status!=='given');
-  const giftsOpen = gifts;
+  const giftsOpen = linked.filter(it=>it.kind==='gift' && it.status!=='given');
   const together = linked.filter(it=>it.kind!=='gift' && !isCompletedFor(it.kind, it.status));
   const upcoming = allEvents().filter(e=>(e.personIds||[]).includes(id) && e._daysUntil!==null && e._daysUntil>=0 && !isCompletedFor(e.kind, e.status)).sort((a,b)=>a._daysUntil-b._daysUntil);
 
-  let next = '';
-  if(p.birthday){ const {m,d}=parseISO(p.birthday); next = formatStamp(nextOccurrenceMD(m,d)); }
-
   const lead = '<button onclick="goView(\'people\')">'+ICON.chevBack+'<span>People</span></button>';
-  const trail = '<button onclick="openPersonSheet({mode:\'edit\', id:\''+p.id+'\'})">Edit</button>';
 
-  return '<div class="navbar"><div class="navbar-lead">'+lead+'</div><span class="navbar-title">'+esc(p.name)+'</span><div class="navbar-trail">'+trail+'</div></div>'
-    + '<div class="profile-block"><div class="avatar" style="background:var('+wash+')">'+esc(initials(p.name))+'</div>'
-    + '<h1>'+esc(p.name)+'</h1><div class="person-rel">'+esc(p.relationshipLabel||'')+(next?' · 🎂 '+next:'')+'</div></div>'
+  const relTags = RELATIONSHIP_TAGS.map(tag=>'<button type="button" class="opt'+(p.relationshipLabel===tag?' active':'')+'" onclick="savePersonField(\''+p.id+'\',\'relationshipLabel\','+jsStr(tag)+')">'+esc(tag)+'</button>').join('');
+  const circleTags = ['family','friend'].map(c=>'<button type="button" class="opt'+(p.circle===c?' active':'')+'" onclick="savePersonField(\''+p.id+'\',\'circle\',\''+c+'\')">'+(c==='family'?'👨‍👩‍👧 Family':'❤️ Friend')+'</button>').join('');
+
+  return '<div class="navbar"><div class="navbar-lead">'+lead+'</div><span class="navbar-title">'+esc(p.name||'New person')+'</span></div>'
+    + '<div class="profile-block">'
+      + '<div class="avatar" style="background:var('+wash+')">'+esc(initials(p.name)||'?')+'</div>'
+      + '<input class="profile-name-input" type="text" value="'+esc(p.name)+'" placeholder="Their name" onblur="savePersonField(\''+p.id+'\',\'name\',this.value)">'
+    + '</div>'
     + '<main>'
 
-    + (upcoming.length ? '<section class="block"><div class="block-head"><span class="block-title">Upcoming with '+esc(firstName(p.name))+'</span></div><div class="ios-group">'+upcoming.map(renderEventCard).join('')+'</div></section>' : '')
+    + '<section class="block"><div class="block-head"><span class="block-title">Relationship</span></div><div class="pillgroup">'+relTags+'</div>'
+      + '<div class="ios-group" style="margin-top:6px;"><div class="form-row"><input type="text" style="text-align:left;" value="'+esc(p.relationshipLabel||'')+'" placeholder="Or type something else" onblur="savePersonField(\''+p.id+'\',\'relationshipLabel\',this.value)"></div></div>'
+    + '</section>'
+
+    + '<section class="block"><div class="block-head"><span class="block-title">Circle</span></div><div class="pillgroup">'+circleTags+'</div></section>'
+
+    + '<section class="block"><div class="block-head"><span class="block-title">Birthday</span></div><div class="ios-group"><div class="form-row"><input type="date" value="'+esc(p.birthday||'')+'" onchange="savePersonField(\''+p.id+'\',\'birthday\',this.value)"></div></div></section>'
+
+    + (upcoming.length ? '<section class="block"><div class="block-head"><span class="block-title">Upcoming with '+esc(fname)+'</span></div><div class="ios-group">'+upcoming.map(renderEventCard).join('')+'</div></section>' : '')
 
     + '<section class="block"><div class="block-head"><span class="block-title">Gift ideas</span><button class="btn small" onclick="openItemSheet({mode:\'new\', personId:\''+p.id+'\', kind:\'gift\'})">+ Add</button></div>'
     + (giftsOpen.length ? '<div class="ios-group">'+giftsOpen.map(renderEventCard).join('')+'</div>' : '<div class="empty">No gift ideas saved yet.</div>')
     + '</section>'
 
     + '<section class="block"><div class="block-head"><span class="block-title">Things to do together</span><button class="btn small" onclick="openItemSheet({mode:\'new\', personId:\''+p.id+'\', kind:\'plan\'})">+ Add</button></div>'
-    + (together.length ? '<div class="ios-group">'+together.map(renderEventCard).join('')+'</div>' : '<div class="empty">Nothing saved yet — what would you love to do with '+esc(firstName(p.name))+'?</div>')
+    + (together.length ? '<div class="ios-group">'+together.map(renderEventCard).join('')+'</div>' : '<div class="empty">Nothing saved yet — what would you love to do with '+esc(fname)+'?</div>')
     + '</section>'
 
-    + (memories.length ? '<section class="block"><div class="block-head"><span class="block-title">Memories with '+esc(firstName(p.name))+'</span></div><div class="ios-group">'+memories.map(renderMemoryCard).join('')+'</div></section>' : '')
+    + (memories.length ? '<section class="block"><div class="block-head"><span class="block-title">Memories with '+esc(fname)+'</span></div><div class="ios-group">'+memories.map(renderMemoryCard).join('')+'</div></section>' : '')
 
-    + (p.likes ? '<section class="block"><div class="block-head"><span class="block-title">Things '+esc(firstName(p.name))+' likes</span></div><div class="ios-group"><div class="form-row" style="align-items:flex-start;padding:13px 16px;"><span style="font-size:15px;line-height:1.45;color:var(--ink);">'+esc(p.likes).replace(/\n/g,'<br>')+'</span></div></div></section>' : '')
-    + (p.notes ? '<section class="block"><div class="block-head"><span class="block-title">Notes</span></div><div class="ios-group"><div class="form-row" style="align-items:flex-start;padding:13px 16px;"><span style="font-size:15px;line-height:1.45;color:var(--ink);">'+esc(p.notes).replace(/\n/g,'<br>')+'</span></div></div></section>' : '')
+    + '<section class="block"><div class="block-head"><span class="block-title">What they like</span></div><div class="ios-group"><div class="notes-row"><textarea placeholder="Hobbies, favourites, hints they’ve dropped…" onblur="savePersonField(\''+p.id+'\',\'likes\',this.value)">'+esc(p.likes||'')+'</textarea></div></div></section>'
+
+    + '<section class="block"><div class="block-head"><span class="block-title">Notes</span></div><div class="ios-group"><div class="notes-row"><textarea placeholder="Anything else worth remembering" onblur="savePersonField(\''+p.id+'\',\'notes\',this.value)">'+esc(p.notes||'')+'</textarea></div></div></section>'
+
+    + '<div class="ios-group" style="margin:8px 16px 0;"><div class="form-row delete-row"><button onclick="handleDeletePersonInline(\''+p.id+'\')">Delete this person</button></div></div>'
+
     + '</main>';
 }
+
+window.savePersonField = function(id, field, value){
+  const v = (typeof value==='string') ? value.trim() : value;
+  const payload = {};
+  payload[field] = (field==='birthday') ? (v || null) : v;
+  updatePerson(id, payload);
+};
+
+window.handleDeletePersonInline = async function(id){
+  if(!confirm('Delete this person? This can\'t be undone.')) return;
+  await deletePerson(id);
+  state.personDetailId = null;
+  toast('Removed');
+  render();
+};
 function firstName(n){ return (n||'').split(' ')[0]; }
 
 /* ============================== render: GIFTS ============================== */
 
 function renderGifts(){
-  const occ = christmasOccasion();
+  const xmasOcc = christmasOccasion();
   const monthsAway = monthsUntilChristmas();
-  const xmasGifts = state.items.filter(it=>it.kind==='gift' && it.occasion===occ);
+
+  const bdayPeople = state.people.filter(p=>p.birthday).map(p=>{
+    const occ = personBirthdayOccasion(p);
+    const nd = nextOccurrenceMD(parseISO(p.birthday).m, parseISO(p.birthday).d);
+    const gifts = state.items.filter(it=>it.kind==='gift' && it.occasion===occ && (it.personIds||[]).includes(p.id));
+    return { p, occ, gifts, daysUntil: daysBetween(todayDate(), nd) };
+  }).sort((a,b)=>a.daysUntil-b.daysUntil);
+  const bdayOccasions = new Set(bdayPeople.map(x=>x.occ));
+
+  const xmasGifts = state.items.filter(it=>it.kind==='gift' && it.occasion===xmasOcc);
   const perPerson = state.people.map(p=>{
     const g = xmasGifts.filter(it=>(it.personIds||[]).includes(p.id));
     return { p, gifts:g };
@@ -1153,38 +1248,42 @@ function renderGifts(){
   const withoutPerson = xmasGifts.filter(it=>!(it.personIds||[]).length);
   const sortedCount = perPerson.filter(x=>bestStatus(x.gifts)==='given'||bestStatus(x.gifts)==='wrapped'||bestStatus(x.gifts)==='bought'||bestStatus(x.gifts)==='chosen').length;
 
-  const otherGifts = state.items.filter(it=>it.kind==='gift' && it.occasion!==occ && it.status!=='given');
+  const otherGifts = state.items.filter(it=>it.kind==='gift' && it.occasion!==xmasOcc && !bdayOccasions.has(it.occasion) && it.status!=='given');
   const byStatus = STATUS_ORDER.map(s=>({ s, list: otherGifts.filter(it=>it.status===s) })).filter(x=>x.list.length);
 
   const headline = monthsAway<=4 ? 'Christmas '+christmasYear() : 'Gifts';
   const sub = monthsAway<=4
-    ? (monthsAway<=0 ? 'It’s nearly here.' : monthsAway+' month'+(monthsAway===1?'':'s')+' to go — no rush, just steady thinking.')
+    ? (monthsAway<=0 ? 'It\u2019s nearly here.' : monthsAway+' month'+(monthsAway===1?'':'s')+' to go \u2014 no rush, just steady thinking.')
     : 'A quiet place for gift ideas whenever they come to you.';
 
   const progress = state.people.length ? '<div class="progress-track"><div class="progress-fill" style="width:'+Math.round(100*sortedCount/state.people.length)+'%"></div></div>'
-      + '<p class="page-sub" style="margin-top:6px;font-size:13px;">'+sortedCount+' of '+state.people.length+' people have a direction so far.</p>' : '';
+      + '<p class="page-sub" style="margin-top:6px;font-size:13px;">'+sortedCount+' of '+state.people.length+' people have a direction so far for Christmas.</p>' : '';
 
-  const rows = perPerson.map(({p,gifts})=>{
-    const wash = avatarColorVar(p);
-    const st = bestStatus(gifts);
-    const pill = st ? '<span class="status-pill">'+STATUS_META[st].emoji+' '+STATUS_META[st].label+(gifts.length>1?' ('+gifts.length+')':'')+'</span>'
-                     : '<span class="status-pill">💭 need an idea</span>';
-    return '<div class="ios-row" onclick="openChristmasFor(\''+p.id+'\')">'
-      + '<div class="avatar" style="width:34px;height:34px;font-size:13px;background:var('+wash+')">'+esc(initials(p.name))+'</div>'
-      + '<div class="row-content"><span class="row-title" style="font-size:15px;">'+esc(p.name)+'</span><div class="row-trail">'+pill+'<span class="chev">'+ICON.chev+'</span></div></div>'
-      + '</div>';
-  }).join('');
+  const xmasRows = perPerson.map(({p,gifts})=>renderOccasionBoardRow(p, gifts, "openOccasionPlan('"+p.id+"', "+jsStr(xmasOcc)+", false)")).join('');
+  const bdayRows = bdayPeople.map(({p,gifts})=>renderOccasionBoardRow(p, gifts, "openOccasionPlan('"+p.id+"', "+jsStr(personBirthdayOccasion(p))+", true)")).join('');
 
-  return screenHead('Gifts', '🎁 '+esc(headline), esc(sub), progress)
+  return screenHead('Gifts', '\ud83c\udf81 '+esc(headline), esc(sub), progress)
     + '<main>'
-    + '<section class="block">'
-    + '<div class="ios-group">'+(rows || '<div class="empty">Add people first to plan gifts for them.</div>')+'</div>'
+    + '<section class="block"><div class="block-head"><span class="block-title">Christmas '+christmasYear()+'</span></div>'
+    + '<div class="ios-group">'+(xmasRows || '<div class="empty">Add people first to plan gifts for them.</div>')+'</div>'
     + (withoutPerson.length ? '<div class="ios-group">'+withoutPerson.map(renderEventCard).join('')+'</div>' : '')
     + '</section>'
+    + (bdayRows ? '<section class="block"><div class="block-head"><span class="block-title">\ud83c\udf82 Birthday gifts</span></div><div class="ios-group">'+bdayRows+'</div></section>' : '')
     + '<section class="block"><div class="block-head"><span class="block-title">All other gift ideas</span><button class="btn small" onclick="openItemSheet({mode:\'new\', kind:\'gift\'})">+ Add</button></div>'
-    + (byStatus.length ? byStatus.map(({s,list})=>'<div class="kicker">'+STATUS_META[s].emoji+' '+STATUS_META[s].label+'</div><div class="ios-group">'+list.map(renderEventCard).join('')+'</div>').join('') : '<div class="empty">No other gift ideas yet — tap + to save one whenever it comes to you.</div>')
+    + (byStatus.length ? byStatus.map(({s,list})=>'<div class="kicker">'+STATUS_META[s].emoji+' '+STATUS_META[s].label+'</div><div class="ios-group">'+list.map(renderEventCard).join('')+'</div>').join('') : '<div class="empty">No other gift ideas yet \u2014 tap + to save one whenever it comes to you.</div>')
     + '</section>'
     + '</main>';
+}
+
+function renderOccasionBoardRow(person, gifts, onclickJs){
+  const wash = avatarColorVar(person);
+  const st = bestStatus(gifts);
+  const pill = st ? '<span class="status-pill">'+STATUS_META[st].emoji+' '+STATUS_META[st].label+(gifts.length>1?' ('+gifts.length+')':'')+'</span>'
+                   : '<span class="status-pill">\ud83d\udcad need an idea</span>';
+  return '<div class="ios-row" onclick="'+onclickJs+'">'
+    + '<div class="avatar" style="width:34px;height:34px;font-size:13px;background:var('+wash+')">'+esc(initials(person.name))+'</div>'
+    + '<div class="row-content"><span class="row-title" style="font-size:15px;">'+esc(person.name)+'</span><div class="row-trail">'+pill+'<span class="chev">'+ICON.chev+'</span></div></div>'
+    + '</div>';
 }
 
 function bestStatus(gifts){
@@ -1198,21 +1297,13 @@ function monthsUntilChristmas(){
   const xmas = new Date(cy,11,25);
   return Math.round(daysBetween(now,xmas)/30.44);
 }
-window.openChristmasFor = function(personId){
-  const occ = christmasOccasion();
-  const existing = state.items.find(it=>it.kind==='gift' && it.occasion===occ && (it.personIds||[]).includes(personId));
-  if(existing) openItemSheet({ mode:'edit', id:existing.id });
-  else openItemSheet({ mode:'new', personId, kind:'gift', occasion:occ });
-};
 
 /* ============================== render: SOMEDAY ============================== */
 
 function renderRituals(){
   const rituals = state.items.filter(it=>it.kind==='ritual');
   const bySeasonRitual = SEASON_ORDER.map(s=>({ s, list: rituals.filter(r=>r.periodMonth && SEASON_META[s].months.includes(r.periodMonth)) }));
-  const lead = '<button onclick="closeRituals()">'+ICON.chevBack+'<span>Home</span></button>';
-  return '<div class="navbar"><div class="navbar-lead">'+lead+'</div><span class="navbar-title">Rituals</span></div>'
-    + '<div class="titleblock"><h1 class="page-title">\ud83c\udf3f Rituals</h1><p class="page-sub">The rhythms you keep every year, whether they\u2019re already tradition or ones you\u2019re starting.</p></div>'
+  return screenHead('Rituals', '\ud83c\udf3f Rituals', 'The rhythms you keep every year, whether they\u2019re already tradition or ones you\u2019re starting.')
     + '<main>'
     + '<section class="block"><div class="block-head"><span class="block-title">By season</span><button class="btn small" onclick="openItemSheet({mode:\'new\', kind:\'ritual\'})">+ Add</button></div>'
     + bySeasonRitual.filter(x=>x.list.length).map(({s,list})=>{
@@ -1277,7 +1368,6 @@ function renderSheet(){
   const root = document.getElementById('sheet-root');
   if(!state.sheet){ root.innerHTML=''; return; }
   if(state.sheet.type==='capture' || state.sheet.type==='item') root.innerHTML = itemSheetHTML(state.sheet);
-  else if(state.sheet.type==='person') root.innerHTML = personSheetHTML(state.sheet);
   else if(state.sheet.type==='sync') root.innerHTML = syncSheetHTML();
 }
 
@@ -1523,65 +1613,6 @@ window.submitItemSheet = submitItemSheet;
 window.handleDeleteItem = async function(){
   const id = state.sheet.id;
   await deleteItem(id);
-  toast('Removed');
-  closeSheet();
-};
-
-/* ---------- person sheet ---------- */
-
-window.openPersonSheet = function(opts){
-  if(opts.mode==='edit'){
-    const p = personById(opts.id);
-    state.sheet = { type:'person', mode:'edit', id:p.id, draft: Object.assign({ circle:'family' }, p) };
-  } else {
-    state.sheet = { type:'person', mode:'new', draft:{ name:'', relationshipLabel:'', circle:'family', birthday:'', likes:'', notes:'' } };
-  }
-  renderSheet();
-};
-
-function personSheetHTML(sheet){
-  const d = sheet.draft;
-  const circlePills = ['family','friend'].map(c=>'<button type="button" class="opt'+(d.circle===c?' active':'')+'" onclick="setDraft(\'circle\',\''+c+'\')">'+(c==='family'?'👨‍👩‍👧 Family':'❤️ Friend')+'</button>').join('');
-  return '<div class="backdrop" onclick="closeSheet()"></div>'
-  + '<div class="sheet" role="dialog" aria-modal="true">'
-  + '<div class="sheet-handle"></div>'
-  + '<div class="sheet-head"><button class="navbtn plain" onclick="closeSheet()">Cancel</button><h2>'+(sheet.mode==='edit'?'Edit Person':'New Person')+'</h2><button class="navbtn strong" onclick="submitPersonSheet()">'+(sheet.mode==='edit'?'Save':'Add')+'</button></div>'
-  + '<div class="sheet-body">'
-  + '<div class="ios-group">'
-  + '<div class="form-row"><span class="flabel">Name</span><input id="pf-name" type="text" value="'+esc(d.name)+'" placeholder="e.g. Mum"></div>'
-  + '<div class="form-row"><span class="flabel">Relationship</span><input id="pf-rel" type="text" value="'+esc(d.relationshipLabel||'')+'" placeholder="e.g. Mum"></div>'
-  + '<div class="form-row"><span class="flabel">Birthday</span><input id="pf-bday" type="date" value="'+esc(d.birthday||'')+'"></div>'
-  + '</div>'
-  + '<div class="form-header">Circle</div><div class="pillgroup" id="f-kind-group">'+circlePills+'</div>'
-  + '<div class="form-header">Things they like</div><div class="ios-group"><div class="notes-row"><textarea id="pf-likes" placeholder="Hobbies, favourites, hints they’ve dropped…">'+esc(d.likes||'')+'</textarea></div></div>'
-  + '<div class="form-header">Notes</div><div class="ios-group"><div class="notes-row"><textarea id="pf-notes" placeholder="Anything else worth remembering">'+esc(d.notes||'')+'</textarea></div></div>'
-  + (sheet.mode==='edit' ? '<div class="ios-group" style="margin-top:26px;"><div class="form-row delete-row"><button onclick="handleDeletePerson()">Delete</button></div></div>' : '')
-  + '</div></div>';
-}
-
-async function submitPersonSheet(){
-  const sheet = state.sheet;
-  const name = (document.getElementById('pf-name').value||'').trim();
-  if(!name){ toast('Give them a name first'); return; }
-  const payload = {
-    name,
-    relationshipLabel: (document.getElementById('pf-rel').value||'').trim(),
-    circle: sheet.draft.circle||'family',
-    birthday: document.getElementById('pf-bday').value || null,
-    likes: (document.getElementById('pf-likes').value||'').trim(),
-    notes: (document.getElementById('pf-notes').value||'').trim(),
-  };
-  if(!payload.birthday) delete payload.birthday;
-  if(sheet.mode==='edit'){ await updatePerson(sheet.id, payload); toast('Saved'); }
-  else { const id = await addPerson(payload); toast('Added'); state.personDetailId=id; state.view='people'; }
-  closeSheet();
-}
-window.submitPersonSheet = submitPersonSheet;
-
-window.handleDeletePerson = async function(){
-  const id = state.sheet.id;
-  await deletePerson(id);
-  state.personDetailId = null; state.view='people';
   toast('Removed');
   closeSheet();
 };
