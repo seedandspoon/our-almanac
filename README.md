@@ -2,18 +2,25 @@
 
 A warm, mobile-first family almanac for planning birthdays, gifts, seasonal rituals, and someday ideas throughout the year — not a task list, a way to remember the life you want to live with the people you care about.
 
+**Live app:** https://seedandspoon.github.io/our-almanac/
+
 ## What's here
 
-`index.html` is the whole app: markup, iOS-inspired styles, and vanilla JS, no build step, no dependencies. It's meant to be published as a [Claude Artifact](https://claude.ai/code/artifact/6405a5bc-d68a-4df5-a3eb-823bfaab34b4), which is where the live version lives and where it gets its persistent database (the `db` runtime capability — people and plans you add there are stored server-side per artifact, shared across every device you open that link from).
+`index.html` is the whole app: markup, iOS-inspired styles, and vanilla JS — no build step, no dependencies. This repo *is* the live app: GitHub Pages serves `index.html` straight from `main`, so a push here updates the real thing within a minute or so, no separate publish step.
 
-Opened any other way — a static file, GitHub Pages, `python -m http.server` — the app still works fully: it detects that `window.claude` isn't available and falls back to storing everything in the browser's own `localStorage` instead. That's local-only and per-browser, but nothing breaks.
+## How your data is stored
 
-## Updating the live app
+The app saves everything to the browser's own `localStorage` — there's no server-side database. That means:
 
-The GitHub copy and the published Claude Artifact are two separate files that happen to start identical — editing one does not update the other. To ship a change:
+- Your data stays **on whichever device and browser you added it from**. Opening the link on a new phone, or in a different browser, starts fresh rather than showing what you already saved.
+- Clearing that browser's site data (or using it in a private/incognito window) clears your almanac too.
+- This was a deliberate trade-off for simplicity: one link, one place, no publish-sync step to think about — at the cost of no automatic sync across devices.
 
-1. Edit `index.html` here, commit and push as usual.
-2. Re-publish the same content to the Claude Artifact (via Claude Code, pointing at the artifact's existing URL) so the live link picks it up.
+If cross-device sync ever matters enough to be worth the extra step back, the app already has a Claude Artifact–based version with a real shared database — ask for that setup again.
+
+## Updating the app
+
+Edit `index.html`, commit, push. That's it.
 
 ## Running it locally
 
