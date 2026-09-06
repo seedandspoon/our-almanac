@@ -8,15 +8,17 @@ A warm, mobile-first family almanac for planning birthdays, gifts, seasonal ritu
 
 `index.html` is the whole app: markup, iOS-inspired styles, and vanilla JS — no build step, no dependencies. This repo *is* the live app: GitHub Pages serves `index.html` straight from `main`, so a push here updates the real thing within a minute or so, no separate publish step.
 
-## How your data is stored
+## How your data is stored and synced
 
-The app saves everything to the browser's own `localStorage` — there's no server-side database. That means:
+Data lives in a small Firestore database (Firebase project `our-almanac-cb912`, owned by heyseedandspoon@gmail.com — a free "Spark" plan project, no billing attached). There's no login screen: the app signs each device in anonymously the moment it loads, invisibly.
 
-- Your data stays **on whichever device and browser you added it from**. Opening the link on a new phone, or in a different browser, starts fresh rather than showing what you already saved.
-- Clearing that browser's site data (or using it in a private/incognito window) clears your almanac too.
-- This was a deliberate trade-off for simplicity: one link, one place, no publish-sync step to think about — at the cost of no automatic sync across devices.
+What ties your devices together is a **sync code** — a random string like `ppvh6mef6l`, generated the first time you ever open the app. Tap **Sync** on Home to see this device's code, copy it, and enter it (via the same Sync screen → "Use a different code") on any other device to make it show the same almanac. No code, no access — that's the entire security model, and it's enforced by the database's own rules, not just by the app hiding a button.
 
-If cross-device sync ever matters enough to be worth the extra step back, the app already has a Claude Artifact–based version with a real shared database — ask for that setup again.
+If a device already has data saved locally from before sync existed, the very first time it sets up sync it carries that data over rather than starting blank.
+
+**Fallback:** if Firebase is ever unreachable (offline, blocked, etc.), the app falls back to the browser's own `localStorage` automatically so it keeps working — just without syncing until it can reconnect.
+
+**Backups:** the same Sync screen has "Download a backup" (saves everything as a JSON file) and "Restore from a backup" (loads one back in, replacing what's currently synced). Worth doing occasionally regardless of how much you trust Firebase — it's your data's exit door if you ever need one.
 
 ## Updating the app
 

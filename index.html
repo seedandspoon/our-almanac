@@ -1,3 +1,6 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Our Almanac</title>
 <style>
   :root{
@@ -185,6 +188,7 @@
   /* ---------- gifts ---------- */
   .status-pill{ display:inline-flex; align-items:center; gap:5px; font-size:12.5px; font-weight:500; padding:4px 10px; border-radius:var(--r-pill); background:var(--fill); color:var(--ink-soft); white-space:nowrap; }
   .plan-btn{ background:var(--accent-wash); color:var(--accent); font-weight:600; font-size:13px; padding:6px 12px; border-radius:var(--r-pill); border:none; cursor:pointer; }
+  .mono-code{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:17px; font-weight:600; letter-spacing:.03em; }
   .progress-track{ height:6px; border-radius:99px; background:var(--fill); overflow:hidden; margin-top:12px; }
   .progress-fill{ height:100%; background:var(--accent); border-radius:99px; transition:width .3s; }
 
@@ -262,6 +266,9 @@
 <div id="sheet-root"></div>
 <div id="toast-root"></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 (function(){
 "use strict";
@@ -352,6 +359,8 @@ let state = {
   dismissedNudges: new Set(),
   captureTouched: new Set(),
   loaded: false,
+  syncCode: null,
+  showSyncCodeOnBoot: false,
 };
 
 let dbApi = null;
@@ -359,6 +368,30 @@ let useLocal = false;
 const LS_PEOPLE = 'almanac_people_v1';
 const LS_ITEMS = 'almanac_items_v1';
 const LS_SEEDED = 'almanac_seeded_v1';
+const LS_SYNC_CODE = 'almanac_sync_code_v1';
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAM_Y0R7MlDWFGhlKoDg2Ms8OjzUVjjERU",
+  authDomain: "our-almanac-cb912.firebaseapp.com",
+  projectId: "our-almanac-cb912",
+  storageBucket: "our-almanac-cb912.firebasestorage.app",
+  messagingSenderId: "956055569272",
+  appId: "1:956055569272:web:9893c9ca4bb7328a4bbe8d"
+};
+
+function generateSyncCode(){
+  return Math.random().toString(36).slice(2,7) + Math.random().toString(36).slice(2,7);
+}
+
+/* Wraps the real Firestore instance so every existing dbApi.collection('people') /
+   dbApi.doc('items/'+id) call transparently lands under this household's own path —
+   no other code in the app needs to know sync codes exist. */
+function scopedDb(root, code){
+  return {
+    collection(path){ return root.collection('households/'+code+'/'+path); },
+    doc(path){ return root.doc('households/'+code+'/'+path); },
+  };
+}
 
 /* ============================== utils ============================== */
 
@@ -502,10 +535,20 @@ function getSeedPayload(){
 }
 
 async function initStore(){
-  try{ dbApi = (window.claude && typeof window.claude.use==='function') ? await window.claude.use('db') : null; }
-  catch(e){ dbApi = null; }
+  try{
+    if(typeof firebase === 'undefined') throw new Error('Firebase SDK failed to load');
+    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    await firebase.auth().signInAnonymously();
+    const root = firebase.firestore();
+    try{ await root.enablePersistence({ synchronizeTabs:true }); }catch(e){ /* offline cache is a bonus, not required */ }
 
-  if(dbApi){
+    let code = localStorage.getItem(LS_SYNC_CODE);
+    const isNewCode = !code;
+    if(!code){ code = generateSyncCode(); localStorage.setItem(LS_SYNC_CODE, code); }
+    state.syncCode = code;
+    dbApi = scopedDb(root, code);
+    useLocal = false;
+
     dbApi.collection('people').onSnapshot(
       snap=>{ state.people = snap.docs.map(d=>Object.assign({id:d.id}, d.data())); state.loaded=true; render(); },
       ()=>{ enterLocalMode(); }
@@ -514,11 +557,12 @@ async function initStore(){
       snap=>{ state.items = snap.docs.map(d=>Object.assign({id:d.id}, d.data())); state.loaded=true; render(); },
       ()=>{ enterLocalMode(); }
     );
-    try{
-      const seedDoc = await dbApi.doc('meta/seed').get();
-      if(!seedDoc.exists){ await seedRemote(); await dbApi.doc('meta/seed').set({ seeded:true, at:new Date().toISOString() }); }
-    }catch(e){ /* seeding best-effort */ }
-  } else {
+
+    if(isNewCode){
+      await seedRemote();
+      state.showSyncCodeOnBoot = true;
+    }
+  } catch(e){
     enterLocalMode();
   }
 }
@@ -539,7 +583,18 @@ function enterLocalMode(){
   render();
 }
 
+/* Runs once, the first time this device generates a brand-new sync code. If this
+   browser already had almanac data saved locally (from before sync existed), that
+   data is carried over — preserving the original ids, since items reference people
+   by id and re-minting ids on the way in would silently break every "who's it for"
+   link. A device with nothing saved yet falls back to the friendly starter examples. */
 async function seedRemote(){
+  loadLocal();
+  if(state.people.length || state.items.length){
+    for(const p of state.people){ const {id, ...rest} = p; await dbApi.collection('people').doc(id).set(rest); }
+    for(const it of state.items){ const {id, ...rest} = it; await dbApi.collection('items').doc(id).set(rest); }
+    return;
+  }
   const seed = getSeedPayload();
   const ids = {};
   for(const p of seed.people){
@@ -584,6 +639,93 @@ async function updateItem(id, data){
 async function deleteItem(id){
   if(useLocal){ state.items = state.items.filter(x=>x.id!==id); saveLocal(); render(); return; }
   await dbApi.doc('items/'+id).delete();
+}
+
+/* ============================== sync + backup ============================== */
+
+function downloadBackup(){
+  const payload = { exportedAt: new Date().toISOString(), people: state.people, items: state.items };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'our-almanac-backup-'+todayDate().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded');
+}
+window.downloadBackup = downloadBackup;
+
+async function restoreFromBackup(payload){
+  const people = payload.people||[];
+  const items = payload.items||[];
+  if(useLocal){ state.people = people; state.items = items; saveLocal(); render(); return; }
+  const peopleSnap = await dbApi.collection('people').get();
+  for(const d of peopleSnap.docs) await dbApi.doc('people/'+d.id).delete();
+  const itemsSnap = await dbApi.collection('items').get();
+  for(const d of itemsSnap.docs) await dbApi.doc('items/'+d.id).delete();
+  for(const p of people){ const {id, ...rest} = p; await dbApi.collection('people').doc(id).set(rest); }
+  for(const it of items){ const {id, ...rest} = it; await dbApi.collection('items').doc(id).set(rest); }
+}
+
+window.handleRestoreFile = function(event){
+  const file = event.target.files[0];
+  event.target.value = '';
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try{
+      const payload = JSON.parse(reader.result);
+      if(!confirm('This replaces everything currently synced with the contents of this backup file. Continue?')) return;
+      await restoreFromBackup(payload);
+      toast('Backup restored');
+      closeSheet();
+    }catch(e){ toast('Could not read that file'); }
+  };
+  reader.readAsText(file);
+};
+
+window.copySyncCode = function(){
+  const code = state.syncCode || localStorage.getItem(LS_SYNC_CODE) || '';
+  if(!code) return;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code).then(()=>toast('Code copied')).catch(()=>toast('Could not copy — select and copy it by hand'));
+  } else {
+    toast('Could not copy — select and copy it by hand');
+  }
+};
+
+window.switchSyncCode = function(){
+  const input = document.getElementById('f-switch-code');
+  const code = (input.value||'').trim().toLowerCase();
+  if(!code){ toast('Enter a code first'); return; }
+  if(code === state.syncCode){ toast('That\'s already this device\'s code'); return; }
+  localStorage.setItem(LS_SYNC_CODE, code);
+  location.reload();
+};
+
+window.openSyncSheet = function(){ state.sheet = { type:'sync' }; renderSheet(); };
+
+function syncSheetHTML(){
+  const code = state.syncCode || localStorage.getItem(LS_SYNC_CODE) || '—';
+  return '<div class="backdrop" onclick="closeSheet()"></div>'
+  + '<div class="sheet" role="dialog" aria-modal="true">'
+  + '<div class="sheet-handle"></div>'
+  + '<div class="sheet-head"><span></span><h2>Sync</h2><button class="navbtn strong" onclick="closeSheet()">Done</button></div>'
+  + '<div class="sheet-body">'
+  + '<div class="form-header">This device\'s sync code</div>'
+  + '<div class="ios-group"><div class="form-row"><span class="flabel mono-code">'+esc(code)+'</span><button class="plan-btn" onclick="copySyncCode()">Copy</button></div></div>'
+  + '<div class="form-footnote">Enter this same code on any other device — tap Sync there, then "Use a different code" — to keep them showing the same almanac. Anyone who doesn\'t have this code can\'t see your data.</div>'
+  + '<div class="form-header">Use a different code</div>'
+  + '<div class="ios-group"><div class="form-row"><input id="f-switch-code" type="text" style="text-align:left;" placeholder="paste a code here"></div></div>'
+  + '<div class="btn-row"><button class="btn primary block" onclick="switchSyncCode()">Switch to this code</button></div>'
+  + '<div class="form-footnote">This replaces what this device is showing with whatever that code\'s almanac holds — it\'s how you join a device to one that\'s already set up.</div>'
+  + '<div class="form-header">Backup</div>'
+  + '<div class="ios-group">'
+    + '<div class="ios-row" onclick="downloadBackup()"><div class="row-content"><span class="row-title">Download a backup</span></div></div>'
+    + '<div class="ios-row" onclick="document.getElementById(\'f-restore-file\').click()"><div class="row-content"><span class="row-title">Restore from a backup</span></div></div>'
+  + '</div>'
+  + '<input type="file" id="f-restore-file" accept="application/json" style="display:none" onchange="handleRestoreFile(event)">'
+  + '</div></div>';
 }
 
 /* Quietly promotes overdue "Planned" items to "Done" so nothing needs manual closing out.
@@ -672,6 +814,7 @@ function render(){
   const app = document.getElementById('app');
   if(!state.loaded){ app.innerHTML = renderLoading(); return; }
   if(!state.__reconciled){ state.__reconciled = true; reconcileCompletions(); }
+  if(state.showSyncCodeOnBoot && !state.sheet){ state.showSyncCodeOnBoot = false; openSyncSheet(); }
   let body = '';
   if(state.memoriesOpen) body = renderMemories();
   else if(state.ritualsOpen) body = renderRituals();
@@ -761,6 +904,7 @@ function renderHome(){
     + '<section class="block"><div class="ios-group">'
       + '<div class="ios-row" onclick="openRituals()"><div class="icon-sq" style="background:var(--accent)">🌿</div><div class="row-content"><div class="row-text"><div class="row-title">Rituals</div><div class="person-rel">The rhythms you keep every year</div></div><div class="row-trail"><span class="row-when">'+ritualCount+'</span><span class="chev">'+ICON.chev+'</span></div></div></div>'
       + '<div class="ios-row" onclick="openMemories()"><div class="icon-sq" style="background:var(--ink-faint)">📖</div><div class="row-content"><div class="row-text"><div class="row-title">Memories</div><div class="person-rel">What you\'ve already lived, kept safe</div></div><div class="row-trail"><span class="row-when">'+(memoryCount ? memoryCount+' kept' : 'None yet')+'</span><span class="chev">'+ICON.chev+'</span></div></div></div>'
+      + '<div class="ios-row" onclick="openSyncSheet()"><div class="icon-sq" style="background:var(--winter)">🔗</div><div class="row-content"><div class="row-text"><div class="row-title">Sync</div><div class="person-rel">Keep your other devices showing the same almanac</div></div><div class="row-trail"><span class="chev">'+ICON.chev+'</span></div></div></div>'
     + '</div></section>'
     + '</main>';
 }
@@ -1134,6 +1278,7 @@ function renderSheet(){
   if(!state.sheet){ root.innerHTML=''; return; }
   if(state.sheet.type==='capture' || state.sheet.type==='item') root.innerHTML = itemSheetHTML(state.sheet);
   else if(state.sheet.type==='person') root.innerHTML = personSheetHTML(state.sheet);
+  else if(state.sheet.type==='sync') root.innerHTML = syncSheetHTML();
 }
 
 function closeSheet(){ state.sheet=null; state.captureTouched=new Set(); renderSheet(); }
