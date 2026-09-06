@@ -1,0 +1,1450 @@
+<title>Our Almanac</title>
+<style>
+  :root{
+    --bg:#F2F2F7; --surface:#FFFFFF; --surface-2:#FFFFFF;
+    --ink:#1C1C1E; --ink-soft:#6C6C70; --ink-faint:#AEAEB2;
+    --sep:#E5E5EA; --sep-strong:#D1D1D6; --fill:#E9E9EB;
+    --accent:#34C759; --accent-ink:#FFFFFF; --accent-wash:#34C7591A;
+    --gold:#FF9500;
+    --winter:#5856D6; --winter-wash:#5856D61A;
+    --spring:#FF2D55; --spring-wash:#FF2D551A;
+    --summer:#FF9500; --summer-wash:#FF95001A;
+    --autumn:#A2703E; --autumn-wash:#A2703E1A;
+    --danger:#FF3B30;
+    --bar-bg: rgba(242,242,247,.78);
+    --shadow-lift: 0 2px 10px rgba(0,0,0,.10), 0 16px 34px -12px rgba(0,0,0,.28);
+    --r-group:14px; --r-ctl:10px; --r-pill:999px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#000000; --surface:#1C1C1E; --surface-2:#2C2C2E;
+      --ink:#FFFFFF; --ink-soft:#98989F; --ink-faint:#636366;
+      --sep:#38383A; --sep-strong:#48484A; --fill:#2C2C2E;
+      --accent:#30D158; --accent-ink:#FFFFFF; --accent-wash:#30D1581F;
+      --gold:#FF9F0A;
+      --winter:#7D7AFF; --winter-wash:#7D7AFF22;
+      --spring:#FF375F; --spring-wash:#FF375F22;
+      --summer:#FF9F0A; --summer-wash:#FF9F0A22;
+      --autumn:#C48A56; --autumn-wash:#C48A5622;
+      --danger:#FF453A;
+      --bar-bg: rgba(0,0,0,.72);
+      --shadow-lift: 0 4px 16px rgba(0,0,0,.4), 0 18px 40px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#000000; --surface:#1C1C1E; --surface-2:#2C2C2E;
+    --ink:#FFFFFF; --ink-soft:#98989F; --ink-faint:#636366;
+    --sep:#38383A; --sep-strong:#48484A; --fill:#2C2C2E;
+    --accent:#30D158; --accent-ink:#FFFFFF; --accent-wash:#30D1581F;
+    --gold:#FF9F0A;
+    --winter:#7D7AFF; --winter-wash:#7D7AFF22;
+    --spring:#FF375F; --spring-wash:#FF375F22;
+    --summer:#FF9F0A; --summer-wash:#FF9F0A22;
+    --autumn:#C48A56; --autumn-wash:#C48A5622;
+    --danger:#FF453A;
+    --bar-bg: rgba(0,0,0,.72);
+    --shadow-lift: 0 4px 16px rgba(0,0,0,.4), 0 18px 40px -12px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased; font-size:16px;
+  }
+  ::selection{ background:var(--accent); color:#fff; }
+  button{ font-family:inherit; }
+  textarea,input,select{ font-family:inherit; }
+  a{ color:inherit; }
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  svg{ display:block; }
+
+  #shell{ max-width:520px; margin:0 auto; min-height:100vh; position:relative; padding-bottom:100px; background:var(--bg); }
+
+  /* ---------- nav bar + large title ---------- */
+  .navbar{
+    position:sticky; top:0; z-index:20; height:44px; display:flex; align-items:center;
+    padding:0 6px; background:transparent;
+  }
+  .navbar.scrolled{ background:var(--bar-bg); backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%); border-bottom:0.5px solid var(--sep); }
+  .navbar-title{
+    position:absolute; left:50%; transform:translateX(-50%); font-size:17px; font-weight:600;
+    opacity:0; transition:opacity .18s ease; white-space:nowrap; max-width:60%; overflow:hidden; text-overflow:ellipsis;
+  }
+  .navbar.scrolled .navbar-title{ opacity:1; }
+  .navbar-lead, .navbar-trail{ display:flex; align-items:center; gap:4px; font-size:15px; color:var(--accent); z-index:1; padding:0 8px; white-space:nowrap; }
+  .navbar-lead{ margin-right:auto; } .navbar-trail{ margin-left:auto; }
+  .navbar-lead button, .navbar-trail button{ background:none; border:none; color:var(--accent); font-size:15px; font-weight:400; padding:6px 4px; cursor:pointer; display:flex; align-items:center; gap:3px; }
+  .titleblock{ padding:2px 16px 14px; }
+  .page-title{ font-size:32px; font-weight:700; letter-spacing:-0.4px; line-height:1.12; margin:2px 0 4px; text-wrap:balance; }
+  .page-sub{ color:var(--ink-soft); font-size:15px; line-height:1.42; max-width:36ch; }
+
+  main{ padding:2px 0 24px; display:flex; flex-direction:column; gap:26px; }
+  section.block{ display:flex; flex-direction:column; gap:8px; }
+  .block-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:0 30px 0 16px;}
+  .block-title{ font-size:13px; text-transform:uppercase; letter-spacing:.02em; color:var(--ink-soft); font-weight:600; }
+  .kicker{ font-size:13px; letter-spacing:.02em; text-transform:uppercase; color:var(--ink-soft); font-weight:600; padding:0 16px; margin-top:2px; }
+
+  /* ---------- grouped list ---------- */
+  .ios-group{ background:var(--surface); border-radius:var(--r-group); margin:0 16px; overflow:hidden; }
+  .empty{ padding:16px 16px; text-align:center; color:var(--ink-faint); font-size:14px; }
+
+  .ios-row{ display:flex; align-items:center; padding:0 0 0 14px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .ios-row:active{ background:var(--fill); }
+  .icon-sq{
+    width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    font-size:16px; flex:none; color:#fff;
+  }
+  .row-content{ flex:1; min-width:0; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 14px 11px 12px; border-bottom:0.5px solid var(--sep); }
+  .ios-row:last-child .row-content{ border-bottom:none; }
+  .row-text{ min-width:0; flex:1; }
+  .row-title{ font-size:15.5px; font-weight:590; color:var(--ink); line-height:1.3; }
+  .row-meta{ display:flex; flex-wrap:wrap; gap:5px; margin-top:5px; }
+  .row-trail{ display:flex; align-items:center; gap:6px; flex:none; padding-left:4px; }
+  .row-when{ font-size:13px; color:var(--ink-soft); white-space:nowrap; text-align:right; }
+  .chev{ color:var(--ink-faint); width:7px; flex:none; }
+
+  .tag{
+    font-size:11.5px; padding:3px 8px; border-radius:var(--r-pill);
+    color:var(--ink-soft); background:var(--fill); white-space:nowrap; font-weight:500;
+  }
+  .tag.strong{ color:#fff; font-weight:600; }
+
+  .nudge{
+    background:var(--accent-wash); border-radius:var(--r-group); padding:14px 16px; margin:0 16px;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .nudge p{ font-size:14.5px; line-height:1.5; margin:0; color:var(--ink); }
+  .nudge .actions{ display:flex; gap:14px; align-items:center; }
+
+  /* ---------- buttons ---------- */
+  .btn{ border:none; background:none; color:var(--accent); font-size:15.5px; font-weight:500; padding:6px 2px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; line-height:1.2; }
+  .btn.primary{ background:var(--accent); color:#fff; font-weight:600; padding:13px 18px; border-radius:12px; }
+  .btn.primary.small{ padding:8px 15px; border-radius:10px; font-size:14px; }
+  .btn.ghost{ padding:6px 4px; }
+  .btn.danger{ color:var(--danger); }
+  .btn.small{ font-size:14px; padding:4px 2px; }
+  .btn.block{ width:100%; justify-content:center; }
+  .btn:disabled{ opacity:.4; }
+  .btn-row{ padding:2px 16px; }
+
+  .ios-back{ display:inline-flex; align-items:center; gap:2px; background:none; border:none; color:var(--accent); font-size:16px; padding:6px 4px 6px 0; cursor:pointer; }
+  .ios-back svg{ width:11px; }
+
+  /* ---------- bottom nav ---------- */
+  nav.bottomnav{
+    position:fixed; bottom:0; left:0; right:0; z-index:30;
+    background:var(--bar-bg); backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
+    border-top:0.5px solid var(--sep);
+    display:flex; max-width:520px; margin:0 auto; padding:6px 4px calc(4px + env(safe-area-inset-bottom));
+  }
+  nav.bottomnav button{
+    flex:1; background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:2px;
+    padding:5px 2px; color:var(--ink-faint); cursor:pointer;
+  }
+  nav.bottomnav button svg{ width:24px; height:24px; }
+  nav.bottomnav button .lb{ font-size:10px; font-weight:500; letter-spacing:0; }
+  nav.bottomnav button.active{ color:var(--accent); }
+
+  .fab{
+    position:fixed; right:calc(50% - 260px + 16px); bottom:74px; z-index:31;
+    width:54px; height:54px; border-radius:50%; background:var(--accent); color:#fff;
+    box-shadow:var(--shadow-lift); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .fab svg{ width:24px; height:24px; }
+  @media (max-width:519px){ .fab{ right:16px; } }
+
+  /* ---------- segmented control ---------- */
+  .mode-switch{ display:flex; background:var(--fill); border-radius:9px; padding:2px; gap:2px; margin-top:10px; }
+  .mode-switch button{ flex:1; border:none; background:transparent; padding:6px 10px; border-radius:7px; font-size:13px; font-weight:500; color:var(--ink); cursor:pointer;}
+  .mode-switch button.active{ background:var(--surface); box-shadow:0 1px 3px rgba(0,0,0,.15); font-weight:600; }
+
+  .season-strip{ display:flex; align-items:center; gap:10px; padding:4px 16px 2px; }
+  .season-strip .icon-sq{ width:30px; height:30px; border-radius:8px; font-size:14px; }
+  .season-strip h3{ font-size:19px; font-weight:700; margin:0; letter-spacing:-.2px; }
+  .season-strip .range{ font-size:12.5px; color:var(--ink-faint); margin-left:auto; }
+
+  .month-head{ display:flex; align-items:center; justify-content:space-between; padding:13px 14px; cursor:pointer; }
+  .month-head h4{ font-size:15.5px; font-weight:590; margin:0; }
+  .month-count{ font-size:13px; color:var(--ink-faint); display:flex; align-items:center; gap:6px; }
+
+  /* ---------- people ---------- */
+  .avatar{
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-weight:600; flex:none; color:#fff;
+  }
+  .profile-block{ display:flex; flex-direction:column; align-items:center; text-align:center; padding:6px 16px 18px; gap:6px; }
+  .profile-block .avatar{ width:84px; height:84px; font-size:28px; margin-bottom:4px; }
+  .profile-block h1{ font-size:22px; font-weight:700; margin:0; }
+  .profile-block .person-rel{ font-size:14.5px; color:var(--ink-soft); }
+
+  .person-rel{ font-size:13px; color:var(--ink-faint); margin-top:2px; }
+
+  /* ---------- gifts ---------- */
+  .status-pill{ display:inline-flex; align-items:center; gap:5px; font-size:12.5px; font-weight:500; padding:4px 10px; border-radius:var(--r-pill); background:var(--fill); color:var(--ink-soft); white-space:nowrap; }
+  .plan-btn{ background:var(--accent-wash); color:var(--accent); font-weight:600; font-size:13px; padding:6px 12px; border-radius:var(--r-pill); border:none; cursor:pointer; }
+  .progress-track{ height:6px; border-radius:99px; background:var(--fill); overflow:hidden; margin-top:12px; }
+  .progress-fill{ height:100%; background:var(--accent); border-radius:99px; transition:width .3s; }
+
+  /* ---------- sheet / modal ---------- */
+  .backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.36); z-index:40; animation:fade .18s ease; }
+  @keyframes fade{ from{opacity:0} to{opacity:1} }
+  .sheet{
+    position:fixed; left:0; right:0; bottom:0; z-index:41; max-width:520px; margin:0 auto;
+    background:var(--bg); border-radius:14px 14px 0 0; max-height:90vh; display:flex; flex-direction:column;
+    box-shadow:var(--shadow-lift); animation:up .24s cubic-bezier(.2,.85,.3,1);
+  }
+  @keyframes up{ from{ transform:translateY(28px); opacity:0 } to{ transform:translateY(0); opacity:1 } }
+  .sheet-handle{ width:36px; height:5px; background:var(--sep-strong); border-radius:99px; margin:8px auto 2px; flex:none; }
+  .sheet-head{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:8px 6px 6px; flex:none; }
+  .sheet-head .navbtn{ background:none; border:none; color:var(--accent); font-size:17px; padding:6px 10px; cursor:pointer; }
+  .sheet-head .navbtn.strong{ font-weight:600; justify-self:end; }
+  .sheet-head .navbtn.plain{ justify-self:start; }
+  .sheet-head h2{ font-size:16px; font-weight:600; margin:0; text-align:center; }
+  .sheet-body{ padding:2px 0 30px; overflow-y:auto; display:flex; flex-direction:column; }
+  .sheet-body .form-header:first-child{ padding-top:8px; }
+
+  .form-header{ font-size:13px; text-transform:uppercase; letter-spacing:.02em; color:var(--ink-soft); font-weight:600; padding:18px 16px 6px; }
+  .form-footnote{ font-size:13px; color:var(--ink-faint); padding:6px 16px 0; line-height:1.4; }
+  .form-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; padding:10px 16px; }
+  .form-row:not(:first-child){ border-top:0.5px solid var(--sep); }
+  .form-row .flabel{ font-size:16px; color:var(--ink); flex:none; }
+  .form-row input, .form-row select{ border:none; background:transparent; text-align:right; flex:1; font-size:16px; color:var(--ink); padding:0; min-width:0; }
+  .form-row select{ text-align:right; -webkit-appearance:none; appearance:none; }
+  .form-row:focus-within{ background:var(--fill); }
+  .title-row{ padding:12px 16px; }
+  .title-row input{ border:none; background:transparent; width:100%; font-size:18px; font-weight:600; color:var(--ink); padding:0; }
+  .title-row textarea{ border:none; background:transparent; width:100%; font-size:16px; color:var(--ink); padding:0; min-height:46px; resize:vertical; line-height:1.4; }
+  input::placeholder, textarea::placeholder{ color:var(--ink-faint); }
+  .notes-row{ padding:12px 16px; }
+  .notes-row textarea{ border:none; background:transparent; width:100%; font-size:16px; color:var(--ink); padding:0; min-height:76px; resize:vertical; line-height:1.45; }
+  .delete-row{ justify-content:center; }
+  .delete-row button{ background:none; border:none; color:var(--danger); font-size:16.5px; font-weight:500; padding:12px 0; width:100%; cursor:pointer; }
+
+  .switchrow{ padding:10px 16px; }
+  .switchrow .flabel{ flex:1; }
+  .ios-switch{ appearance:none; -webkit-appearance:none; width:48px; height:29px; border-radius:999px; background:var(--fill); position:relative; cursor:pointer; transition:background .18s; flex:none; margin:0; }
+  .ios-switch::before{ content:''; position:absolute; top:2px; left:2px; width:25px; height:25px; border-radius:50%; background:#fff; box-shadow:0 2px 4px rgba(0,0,0,.25); transition:transform .18s; }
+  .ios-switch:checked{ background:var(--accent); }
+  .ios-switch:checked::before{ transform:translateX(19px); }
+
+  .pillgroup{ display:flex; flex-wrap:wrap; gap:8px; padding:2px 16px 4px; }
+  .pillgroup .opt{ border:none; background:var(--fill); color:var(--ink); padding:8px 14px; border-radius:var(--r-pill); font-size:14px; font-weight:500; cursor:pointer; }
+  .pillgroup .opt.active{ background:var(--accent); color:#fff; font-weight:600; }
+  .chiprow{ display:flex; flex-wrap:wrap; gap:8px; padding:2px 16px 4px; }
+  .chip-select{
+    display:inline-flex; align-items:center; gap:6px; border:none; background:var(--fill);
+    padding:5px 12px 5px 5px; border-radius:var(--r-pill); font-size:14px; cursor:pointer; color:var(--ink);
+  }
+  .chip-select .dot{ width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#fff; }
+  .chip-select.active{ background:var(--accent-wash); color:var(--accent); font-weight:600; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:0; }
+  .row2 select{ text-align:center; }
+  .when-tabs{ display:flex; gap:8px; padding:2px 16px 4px; }
+  .when-tabs .opt{ flex:1; text-align:center; }
+  .when-pane{ display:none; }
+  .when-pane.show{ display:block; }
+
+  /* ---------- toast ---------- */
+  .toast{
+    position:fixed; left:50%; bottom:100px; transform:translateX(-50%); z-index:50;
+    background:rgba(28,28,30,.92); color:#fff; padding:10px 18px; border-radius:var(--r-pill);
+    font-size:13.5px; font-weight:500; box-shadow:var(--shadow-lift); animation:toastin .2s ease;
+  }
+  @keyframes toastin{ from{ opacity:0; transform:translateX(-50%) translateY(6px);} to{opacity:1; transform:translateX(-50%) translateY(0);} }
+</style>
+
+<div id="shell">
+  <div id="app"></div>
+</div>
+<div id="sheet-root"></div>
+<div id="toast-root"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================== icons (SF-Symbol style) ============================== */
+
+const ICON = {
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-6h4v6h3a1 1 0 0 0 1-1v-9"/></svg>',
+  homeFill:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.2 2.8 11.3a1 1 0 0 0 1.3 1.5l.4-.3V19a2 2 0 0 0 2 2h3.5v-6.2h4V21H17.5a2 2 0 0 0 2-2v-6.5l.4.3a1 1 0 0 0 1.3-1.5L12 3.2Z"/></svg>',
+  calendar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="3"/><path d="M4 10h16M8 3.5v3M16 3.5v3"/></svg>',
+  calendarFill:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 2.75a.9.9 0 0 1 1.8 0v1.4h4.4v-1.4a.9.9 0 0 1 1.8 0v1.4H18a3 3 0 0 1 3 3V19a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7.15a3 3 0 0 1 3-3h2v-1.4ZM4.9 10.4V19c0 .6.5 1.1 1.1 1.1h12c.6 0 1.1-.5 1.1-1.1v-8.6H4.9Z"/></svg>',
+  people:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.1"/><path d="M3.3 19.2c0-3.1 2.5-5.3 5.7-5.3s5.7 2.2 5.7 5.3"/><circle cx="17.1" cy="9" r="2.4"/><path d="M15.1 14.1c2.4.3 4.1 2.1 4.1 4.6"/></svg>',
+  peopleFill:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="7.8" r="3.6"/><path d="M2.4 19.5c0-3.5 2.9-6.1 6.6-6.1s6.6 2.6 6.6 6.1c0 .8-.6 1.3-1.3 1.3H3.7c-.7 0-1.3-.5-1.3-1.3Z"/><circle cx="17.6" cy="8.6" r="2.7"/><path d="M15.9 13.6c2.7.5 4.6 2.6 4.7 5.4.02.5-.15.9-.5 1.2.5-.05.9-.1 1.2-.2.9-.2 1.3-.7 1.3-1.4-.1-3-2.4-5.3-5.3-5.6-.5 0-1 .2-1.4.6Z"/></svg>',
+  gift:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9.5" width="16" height="10" rx="2"/><path d="M4 13.2h16"/><path d="M12 9.5v10"/><path d="M12 9.5C10.3 5.7 6.5 6.3 6.5 8.6c0 1 .9 1.3 1.7 1.3M12 9.5C13.7 5.7 17.5 6.3 17.5 8.6c0 1-.9 1.3-1.7 1.3"/></svg>',
+  giftFill:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8.7C10.6 4.9 6.3 5.6 6.3 8c0 1 .8 1.3 1.6 1.3H12ZM12 8.7c1.4-3.8 5.7-3.1 5.7-.7 0-1-.8 1.3-1.6 1.3H12Z"/><rect x="3.3" y="9.8" width="17.4" height="4.4" rx="1.1"/><path d="M4.3 14.2h6.7v6.9H6.4a2.1 2.1 0 0 1-2.1-2.1v-4.8ZM13 14.2h6.7V19a2.1 2.1 0 0 1-2.1 2.1H13v-6.9Z"/></svg>',
+  leaf:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19c9 0 14-5 14-14-9 0-14 5-14 14Z"/><path d="M5 19c2-4 5-7 9-9"/></svg>',
+  leafFill:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.4 19.6c9.7.4 15-4.9 15.2-15.2C9.3 4.2 4 9.6 4.4 19.6Z"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  chev:'<svg viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1.4 1.4 6.6 7l-5.2 5.6"/></svg>',
+  chevBack:'<svg viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 1.4 1.4 7l5.2 5.6"/></svg>',
+};
+
+/* ============================== constants ============================== */
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_SHORT = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+const SEASON_META = {
+  winter:{ emoji:'❄️', label:'Winter', months:[12,1,2], range:'Dec – Feb', var:'--winter' },
+  spring:{ emoji:'🌸', label:'Spring', months:[3,4,5], range:'Mar – May', var:'--spring' },
+  summer:{ emoji:'☀️', label:'Summer', months:[6,7,8], range:'Jun – Aug', var:'--summer' },
+  autumn:{ emoji:'🍂', label:'Autumn', months:[9,10,11], range:'Sep – Nov', var:'--autumn' },
+};
+const SEASON_ORDER = ['winter','spring','summer','autumn'];
+
+const KIND_META = {
+  birthday:{ emoji:'🎂', label:'Birthday' },
+  gift:{ emoji:'🎁', label:'Gift' },
+  ritual:{ emoji:'🌿', label:'Ritual' },
+  plan:{ emoji:'👨‍👩‍👧', label:'Together time' },
+  trip:{ emoji:'✈️', label:'Trip / weekend' },
+  idea:{ emoji:'✨', label:'Someday idea' },
+};
+const KIND_ORDER = ['gift','ritual','plan','trip','idea'];
+
+const STATUS_META = {
+  idea:{ emoji:'💡', label:'Idea' },
+  considering:{ emoji:'🤔', label:'Considering' },
+  chosen:{ emoji:'🎁', label:'Chosen' },
+  bought:{ emoji:'📦', label:'Bought' },
+  wrapped:{ emoji:'🎀', label:'Wrapped' },
+  given:{ emoji:'✅', label:'Given' },
+};
+const STATUS_ORDER = ['idea','considering','chosen','bought','wrapped','given'];
+
+const GENERIC_STATUS_META = {
+  idea:{ emoji:'💡', label:'Idea' },
+  planned:{ emoji:'📌', label:'Planned' },
+  done:{ emoji:'✅', label:'Done' },
+};
+const GENERIC_STATUS_ORDER = ['idea','planned','done'];
+
+function statusMetaFor(kind){ return kind==='gift' ? STATUS_META : GENERIC_STATUS_META; }
+function statusOrderFor(kind){ return kind==='gift' ? STATUS_ORDER : GENERIC_STATUS_ORDER; }
+function isCompletedFor(kind, status){ return kind==='gift' ? status==='given' : (kind!=='ritual' && status==='done'); }
+
+const RITUAL_TYPE_META = {
+  tradition:{ label:'A tradition' },
+  creating:{ label:'A ritual I want to start' },
+  seasonal:{ label:'A seasonal idea' },
+};
+
+const AVATAR_PALETTE = ['--accent','--autumn','--winter','--spring','--summer','--gold'];
+
+/* ============================== state ============================== */
+
+let state = {
+  people: [],
+  items: [],
+  view: 'home',
+  yearMode: 'seasons',
+  openMonths: new Set(),
+  personDetailId: null,
+  memoriesOpen: false,
+  ritualsOpen: false,
+  ideaFilter: 'all',
+  sheet: null,
+  dismissedNudges: new Set(),
+  captureTouched: new Set(),
+  loaded: false,
+};
+
+let dbApi = null;
+let useLocal = false;
+const LS_PEOPLE = 'almanac_people_v1';
+const LS_ITEMS = 'almanac_items_v1';
+const LS_SEEDED = 'almanac_seeded_v1';
+
+/* ============================== utils ============================== */
+
+function esc(s){
+  if(s===undefined||s===null) return '';
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function uid(prefix){ return prefix+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function todayDate(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
+function startOfDay(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
+function daysBetween(a,b){ return Math.round((startOfDay(b)-startOfDay(a))/86400000); }
+function seasonOfMonth(m){ if(m===12||m===1||m===2) return 'winter'; if(m>=3&&m<=5) return 'spring'; if(m>=6&&m<=8) return 'summer'; return 'autumn'; }
+function currentSeason(){ return seasonOfMonth(todayDate().getMonth()+1); }
+
+function nextOccurrenceMD(mm, dd){
+  const now = todayDate(); const y = now.getFullYear();
+  let cand = new Date(y, mm-1, dd);
+  if(startOfDay(cand) < now) cand = new Date(y+1, mm-1, dd);
+  return cand;
+}
+function parseISO(iso){ const [y,m,d] = iso.split('-').map(Number); return {y,m,d}; }
+
+function itemNextDate(ev){
+  if(ev.dateType==='exact' && ev.date){
+    const {y,m,d} = parseISO(ev.date);
+    if(ev.recurYearly) return nextOccurrenceMD(m,d);
+    return new Date(y, m-1, d);
+  }
+  if(ev.dateType==='period' && ev.periodMonth){
+    return nextOccurrenceMD(ev.periodMonth, 15);
+  }
+  return null;
+}
+
+function formatStamp(d){ return pad2(d.getDate())+' '+MONTHS_SHORT[d.getMonth()]; }
+function formatFullDate(iso){ if(!iso) return ''; const d=new Date(iso); return pad2(d.getDate())+' '+MONTHS_SHORT[d.getMonth()]+' '+d.getFullYear(); }
+
+function roughDistance(days){
+  if(days<0) return 'passed';
+  if(days===0) return 'today';
+  if(days===1) return 'tomorrow';
+  if(days<=13) return 'in '+days+' days';
+  if(days<=30) return 'in about '+Math.round(days/7)+' weeks';
+  if(days<=60) return 'in about a month';
+  if(days<=180) return 'in a few months';
+  return 'later this year';
+}
+
+function periodLabel(ev){
+  const m = MONTHS[ev.periodMonth-1];
+  return (ev.periodPrefix ? ev.periodPrefix+' ' : '') + m;
+}
+
+function personById(id){ return state.people.find(p=>p.id===id); }
+function peopleNames(ids){ return (ids||[]).map(id=>personById(id)).filter(Boolean).map(p=>p.name); }
+
+function avatarColorVar(person){
+  const idx = Math.abs(hashStr(person.id)) % AVATAR_PALETTE.length;
+  return AVATAR_PALETTE[idx];
+}
+function hashStr(s){ let h=0; for(let i=0;i<s.length;i++){ h=(h*31 + s.charCodeAt(i))|0; } return h; }
+function initials(name){ return (name||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+
+function occasionIsChristmas(occ){ return !!occ && /christmas/i.test(occ); }
+
+function getKindMeta(ev){
+  let meta = KIND_META[ev.kind] || KIND_META.idea;
+  if((ev.kind==='gift' || ev.kind==='plan') && occasionIsChristmas(ev.occasion)){
+    return { emoji:'🎄', label: ev.kind==='gift' ? 'Christmas gift' : 'Christmas' };
+  }
+  if(ev.kind==='plan' && ev.personIds && ev.personIds.length){
+    const ppl = ev.personIds.map(personById).filter(Boolean);
+    if(ppl.length && ppl.every(p=>p.circle==='friend')) return { emoji:'❤️', label:'Friends' };
+  }
+  return meta;
+}
+
+function washVarFor(ev){
+  if(ev.dateType==='period' && ev.periodMonth) return SEASON_META[seasonOfMonth(ev.periodMonth)].var;
+  if(ev.dateType==='exact' && ev.date) return SEASON_META[seasonOfMonth(parseISO(ev.date).m)].var;
+  if(ev.dateType==='someday' && ev.bestSeasonHint) return SEASON_META[ev.bestSeasonHint].var;
+  return '--accent';
+}
+
+function christmasYear(){
+  const now = todayDate();
+  const y = now.getFullYear();
+  return (now.getMonth()===11 && now.getDate()>25) ? y+1 : y;
+}
+function christmasOccasion(){ return 'Christmas '+christmasYear(); }
+
+/* build the unified events list: real items + synthetic birthdays */
+function allEvents(){
+  const bdays = state.people.filter(p=>p.birthday).map(p=>{
+    const {m,d} = parseISO(p.birthday);
+    return {
+      id:'bday-'+p.id, kind:'birthday', title:p.name+"’s birthday",
+      personIds:[p.id], dateType:'exact', date:p.birthday, recurYearly:true,
+      occasion:'', notes:'', _synthetic:true,
+    };
+  });
+  return state.items.concat(bdays).map(ev=>{
+    const nd = itemNextDate(ev);
+    return Object.assign({}, ev, { _nextDate: nd, _daysUntil: nd ? daysBetween(todayDate(), nd) : null });
+  });
+}
+
+/* ============================== data layer ============================== */
+
+function loadLocal(){
+  try{ state.people = JSON.parse(localStorage.getItem(LS_PEOPLE)||'[]'); }catch(e){ state.people=[]; }
+  try{ state.items = JSON.parse(localStorage.getItem(LS_ITEMS)||'[]'); }catch(e){ state.items=[]; }
+}
+function saveLocal(){
+  localStorage.setItem(LS_PEOPLE, JSON.stringify(state.people));
+  localStorage.setItem(LS_ITEMS, JSON.stringify(state.items));
+}
+
+function getSeedPayload(){
+  const people = [
+    { key:'mum', name:'Mum', relationshipLabel:'Mum', circle:'family', birthday:'2000-10-19', likes:'Pottery, gardening, a good long walk, herbal teas.', notes:'Loves surprises but hates clutter — experiences over things.' },
+    { key:'dad', name:'Dad', relationshipLabel:'Dad', circle:'family', birthday:'2000-05-02', likes:'His walnut trees, woodworking, strong coffee.', notes:'Harvest is always late September into October.' },
+    { key:'brother', name:'Brother', relationshipLabel:'Brother', circle:'family', birthday:'2000-03-14', likes:'Coffee, cycling, gadgets.', notes:'' },
+    { key:'niece', name:'Niece', relationshipLabel:'Niece', circle:'family', birthday:'2000-06-30', likes:'Drawing, animals, anything outdoors.', notes:'' },
+    { key:'friend', name:'Best friend', relationshipLabel:'Best friend', circle:'friend', birthday:'2000-01-11', likes:'Wine, hiking, good design.', notes:'' },
+  ];
+  const items = (ids)=>[
+    { title:'Help Dad with the walnut harvest', kind:'ritual', personIds:[ids.dad], dateType:'period', periodMonth:9, periodPrefix:'late', ritualType:'tradition', recurYearly:true, notes:'Spend the weekend picking up walnuts, bring some home, bake something with them.' },
+    { title:'Pottery workshop for Mum', kind:'gift', personIds:[ids.mum], dateType:'someday', occasion:'Birthday', status:'considering', notes:'She mentioned wanting to try pottery — look for a local weekend workshop.' },
+    { title:'Weekend in Burgundy with Mum', kind:'trip', personIds:[ids.mum], dateType:'someday', bestSeasonHint:'autumn', notes:'She mentioned this a while ago — could be lovely once it cools down.' },
+    { title:'Christmas market with Mum', kind:'plan', personIds:[ids.mum], dateType:'period', periodMonth:12, periodPrefix:'early', occasion:christmasOccasion(), recurYearly:true, notes:'' },
+    { title:'A new coffee grinder', kind:'gift', personIds:[ids.brother], dateType:'someday', occasion:christmasOccasion(), status:'idea', notes:'He mentioned wanting a better grinder.' },
+    { title:'Weekend with my niece', kind:'plan', personIds:[ids.niece], dateType:'someday', bestSeasonHint:'autumn', notes:'Something just the two of us — a museum, a park, baking.' },
+    { title:'The ceramic vase she liked', kind:'gift', personIds:[ids.friend], dateType:'someday', occasion:christmasOccasion(), status:'chosen', notes:'' },
+    { title:'First countryside weekend', kind:'ritual', personIds:[], dateType:'period', periodMonth:4, ritualType:'creating', recurYearly:true, notes:'A ritual I want to start — first proper weekend outdoors once spring arrives.' },
+    { title:'Family Christmas', kind:'plan', personIds:[], dateType:'exact', date: christmasYear()+'-12-25', occasion:christmasOccasion(), recurYearly:true, ritualType:'tradition', notes:'' },
+    { title:'Sailing afternoon', kind:'ritual', personIds:[], dateType:'period', periodMonth:7, ritualType:'tradition', recurYearly:true, notes:'A family tradition most summers.' },
+  ];
+  return { people, items };
+}
+
+async function initStore(){
+  try{ dbApi = (window.claude && typeof window.claude.use==='function') ? await window.claude.use('db') : null; }
+  catch(e){ dbApi = null; }
+
+  if(dbApi){
+    dbApi.collection('people').onSnapshot(
+      snap=>{ state.people = snap.docs.map(d=>Object.assign({id:d.id}, d.data())); state.loaded=true; render(); },
+      ()=>{ enterLocalMode(); }
+    );
+    dbApi.collection('items').onSnapshot(
+      snap=>{ state.items = snap.docs.map(d=>Object.assign({id:d.id}, d.data())); state.loaded=true; render(); },
+      ()=>{ enterLocalMode(); }
+    );
+    try{
+      const seedDoc = await dbApi.doc('meta/seed').get();
+      if(!seedDoc.exists){ await seedRemote(); await dbApi.doc('meta/seed').set({ seeded:true, at:new Date().toISOString() }); }
+    }catch(e){ /* seeding best-effort */ }
+  } else {
+    enterLocalMode();
+  }
+}
+
+function enterLocalMode(){
+  if(useLocal) return;
+  useLocal = true; dbApi = null;
+  loadLocal();
+  if(!localStorage.getItem(LS_SEEDED)){
+    const seed = getSeedPayload();
+    const ids = {};
+    seed.people.forEach(p=>{ const id=uid('p'); ids[p.key]=id; const {key, ...rest}=p; state.people.push(Object.assign({id}, rest)); });
+    seed.items(ids).forEach(it=>{ const id=uid('i'); state.items.push(Object.assign({id}, it)); });
+    saveLocal();
+    localStorage.setItem(LS_SEEDED,'1');
+  }
+  state.loaded = true;
+  render();
+}
+
+async function seedRemote(){
+  const seed = getSeedPayload();
+  const ids = {};
+  for(const p of seed.people){
+    const {key, ...rest} = p;
+    const ref = await dbApi.collection('people').add(rest);
+    ids[key] = ref.id;
+  }
+  for(const it of seed.items(ids)){
+    await dbApi.collection('items').add(it);
+  }
+}
+
+async function addPerson(data){
+  if(useLocal){ const id=uid('p'); state.people.push(Object.assign({id}, data)); saveLocal(); render(); return id; }
+  const ref = await dbApi.collection('people').add(data); return ref.id;
+}
+async function updatePerson(id, data){
+  if(useLocal){ const p=personById(id); if(p) Object.assign(p, data); saveLocal(); render(); return; }
+  await dbApi.doc('people/'+id).update(data);
+}
+async function deletePerson(id){
+  if(useLocal){
+    state.people = state.people.filter(p=>p.id!==id);
+    state.items.forEach(it=>{ it.personIds = (it.personIds||[]).filter(pid=>pid!==id); });
+    saveLocal(); render(); return;
+  }
+  await dbApi.doc('people/'+id).delete();
+  for(const it of state.items){
+    if((it.personIds||[]).includes(id)){
+      await dbApi.doc('items/'+it.id).update({ personIds: it.personIds.filter(pid=>pid!==id) });
+    }
+  }
+}
+async function addItem(data){
+  if(useLocal){ const id=uid('i'); state.items.push(Object.assign({id}, data)); saveLocal(); render(); return id; }
+  const ref = await dbApi.collection('items').add(data); return ref.id;
+}
+async function updateItem(id, data){
+  if(useLocal){ const it=state.items.find(x=>x.id===id); if(it) Object.assign(it, data); saveLocal(); render(); return; }
+  await dbApi.doc('items/'+id).update(data);
+}
+async function deleteItem(id){
+  if(useLocal){ state.items = state.items.filter(x=>x.id!==id); saveLocal(); render(); return; }
+  await dbApi.doc('items/'+id).delete();
+}
+
+/* Quietly promotes overdue "Planned" items to "Done" so nothing needs manual closing out.
+   Scoped narrowly on purpose: only non-recurring plan/trip/idea items with an exact date —
+   rituals and recurring plans are meant to roll forward forever, and gifts stay manual
+   (passing the occasion doesn't mean you actually gave it). Runs once per app load. */
+function reconcileCompletions(){
+  const today = todayDate();
+  state.items.forEach(it=>{
+    if(it.kind==='ritual' || it.kind==='gift') return;
+    if((it.status||'idea')!=='planned') return;
+    if(it.recurYearly) return;
+    if(it.dateType!=='exact' || !it.date) return;
+    const {y,m,d} = parseISO(it.date);
+    const occurred = new Date(y,m-1,d);
+    if(startOfDay(occurred) < today){
+      updateItem(it.id, { status:'done', completedAt: occurred.toISOString() });
+    }
+  });
+}
+
+/* ============================== capture parser (no AI, always works) ============================== */
+
+function parseCapture(text){
+  const raw = text.trim();
+  const lower = raw.toLowerCase();
+  let title = raw;
+  if(raw.includes(':')){
+    const idx = raw.indexOf(':');
+    title = raw.slice(idx+1).trim() || raw;
+  }
+
+  let personIds = [];
+  state.people.forEach(p=>{
+    const names = [p.name, p.relationshipLabel].filter(Boolean).map(s=>s.toLowerCase());
+    if(names.some(n=> n && lower.includes(n))) personIds.push(p.id);
+  });
+
+  let kind = 'plan';
+  if(/\b(gift|cadeau|present|wants a|would like a|mentioned he wants|mentioned she wants)\b/.test(lower)) kind='gift';
+  else if(/\b(every year|each year|tradition|ritual)\b/.test(lower)) kind='ritual';
+  else if(/\b(trip|voyage|travel|holiday abroad)\b/.test(lower)) kind='trip';
+  else if(/\b(someday|maybe one day|would like to someday|dream of)\b/.test(lower)) kind='idea';
+
+  let dateType='someday', date=null, periodMonth=null, periodPrefix='', recurYearly=false;
+
+  const monthRe = /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i;
+  const dayMonthRe = /\b(\d{1,2})(st|nd|rd|th)?\s+(january|february|march|april|may|june|july|august|september|october|november|december)\b/i;
+  const monthDayRe = /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})(st|nd|rd|th)?\b/i;
+
+  let m1 = lower.match(dayMonthRe), m2 = lower.match(monthDayRe);
+  if(m1 || m2){
+    const day = m1 ? parseInt(m1[1],10) : parseInt(m2[2],10);
+    const monName = m1 ? m1[3] : m2[1];
+    const mi = MONTHS.findIndex(mn=>mn.toLowerCase()===monName.toLowerCase())+1;
+    if(mi){ dateType='exact'; const nd = nextOccurrenceMD(mi, day); date = nd.getFullYear()+'-'+pad2(mi)+'-'+pad2(day); }
+  } else {
+    const mm = lower.match(monthRe);
+    if(mm){
+      const mi = MONTHS.findIndex(mn=>mn.toLowerCase()===mm[1].toLowerCase())+1;
+      dateType='period'; periodMonth=mi;
+      if(/\blate\b/.test(lower)) periodPrefix='late';
+      else if(/\bearly\b/.test(lower)) periodPrefix='early';
+      else if(/\bmid\b/.test(lower)) periodPrefix='mid';
+    }
+  }
+  if(/\b(every year|each year|always)\b/.test(lower)) recurYearly = true;
+  if(kind==='ritual') recurYearly = true;
+
+  return { title, kind, personIds, dateType, date, periodMonth, periodPrefix, recurYearly,
+    status: kind==='gift' ? 'idea' : undefined };
+}
+
+/* ============================== toast ============================== */
+let toastTimer=null;
+function toast(msg){
+  const root = document.getElementById('toast-root');
+  root.innerHTML = '<div class="toast">'+esc(msg)+'</div>';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ root.innerHTML=''; }, 2200);
+}
+
+/* ============================== render: shell ============================== */
+
+function render(){
+  const app = document.getElementById('app');
+  if(!state.loaded){ app.innerHTML = renderLoading(); return; }
+  if(!state.__reconciled){ state.__reconciled = true; reconcileCompletions(); }
+  let body = '';
+  if(state.memoriesOpen) body = renderMemories();
+  else if(state.ritualsOpen) body = renderRituals();
+  else if(state.view==='home') body = renderHome();
+  else if(state.view==='year') body = renderYear();
+  else if(state.view==='people') body = state.personDetailId ? renderPersonDetail(state.personDetailId) : renderPeople();
+  else if(state.view==='gifts') body = renderGifts();
+  else if(state.view==='ideas') body = renderIdeas();
+  app.innerHTML = body + renderNav() + '<div class="fab" onclick="openCapture()" aria-label="Add">'+ICON.plus+'</div>';
+  // Note: the sheet is intentionally NOT re-rendered here. Sheet open/close and every
+  // field change already update it directly (see openCapture/openItemSheet/closeSheet/
+  // setDraft below). Rebuilding it here too would wipe out whatever the user is mid-typing
+  // into Title/Occasion/Budget/Notes every time a background data sync (or the initial
+  // seeding writes) calls render() — which is exactly what made typing feel broken.
+  syncNavbarScroll();
+}
+
+function renderLoading(){
+  return '<div class="navbar"></div><main><div class="empty">Opening your almanac…</div></main>';
+}
+
+function syncNavbarScroll(){
+  const bar = document.querySelector('.navbar');
+  if(bar) bar.classList.toggle('scrolled', window.scrollY > 24);
+}
+window.addEventListener('scroll', syncNavbarScroll, { passive:true });
+
+function screenHead(navTitle, bigHtml, subHtml, extraHtml, leadHtml, trailHtml){
+  return '<div class="navbar">'
+    + (leadHtml ? '<div class="navbar-lead">'+leadHtml+'</div>' : '')
+    + '<span class="navbar-title">'+esc(navTitle)+'</span>'
+    + (trailHtml ? '<div class="navbar-trail">'+trailHtml+'</div>' : '')
+    + '</div>'
+    + '<div class="titleblock">'
+    + '<h1 class="page-title">'+bigHtml+'</h1>'
+    + (subHtml ? '<p class="page-sub">'+subHtml+'</p>' : '')
+    + (extraHtml || '')
+    + '</div>';
+}
+
+function renderNav(){
+  const items = [
+    ['home','Home',ICON.home,ICON.homeFill],
+    ['year','Year',ICON.calendar,ICON.calendarFill],
+    ['people','People',ICON.people,ICON.peopleFill],
+    ['gifts','Gifts',ICON.gift,ICON.giftFill],
+    ['ideas','Someday',ICON.leaf,ICON.leafFill],
+  ];
+  return '<nav class="bottomnav">'+items.map(([id,lb,ic,icFill])=>{
+    const active = state.view===id;
+    return '<button class="'+(active?'active':'')+'" onclick="goView(\''+id+'\')">'+(active?icFill:ic)+'<span class="lb">'+lb+'</span></button>';
+  }).join('')+'</nav>';
+}
+
+window.goView = function(v){ state.view=v; state.personDetailId=null; state.memoriesOpen=false; state.ritualsOpen=false; render(); };
+window.openMemories = function(){ state.memoriesOpen=true; render(); };
+window.closeMemories = function(){ state.memoriesOpen=false; render(); };
+window.openRituals = function(){ state.ritualsOpen=true; render(); };
+window.closeRituals = function(){ state.ritualsOpen=false; render(); };
+window.setIdeaFilter = function(f){ state.ideaFilter=f; render(); };
+
+/* ============================== render: HOME ============================== */
+
+function renderHome(){
+  const season = currentSeason();
+  const sm = SEASON_META[season];
+  const events = allEvents().filter(e=>!isCompletedFor(e.kind, e.status));
+  const dated = events.filter(e=>e._daysUntil!==null && e._daysUntil>=-1);
+  dated.sort((a,b)=>a._daysUntil-b._daysUntil);
+  const memoryCount = state.items.filter(it=>isCompletedFor(it.kind, it.status)).length;
+  const ritualCount = state.items.filter(it=>it.kind==='ritual').length;
+
+  const next30 = dated.filter(e=>e._daysUntil<=30);
+  const laterSeason = dated.filter(e=>e._daysUntil>30 && SEASON_META[season].months.includes(monthOf(e))).slice(0,6);
+  const nextSeasonKey = SEASON_ORDER[(SEASON_ORDER.indexOf(season)+1)%4];
+  const lookingAhead = dated.filter(e=>SEASON_META[nextSeasonKey].months.includes(monthOf(e)) && e._daysUntil>0).slice(0,4);
+
+  const somedayNudge = pickNudge(season);
+  const dateStamp = formatStamp(todayDate());
+
+  return screenHead('Home', sm.emoji+' '+greeting(), 'Here’s what the rhythm of your year looks like from today.', '', '', '<span>'+dateStamp+'</span>')
+    + '<main>'
+    + (somedayNudge ? renderNudge(somedayNudge, season) : '')
+    + renderEventSection('Next 30 days', next30, 'Nothing urgent — a quiet stretch ahead.')
+    + renderEventSection('Later this season', laterSeason, 'Nothing else marked for '+sm.label.toLowerCase()+' yet.')
+    + renderEventSection('Looking ahead — '+SEASON_META[nextSeasonKey].label, lookingAhead, '')
+    + '<section class="block"><div class="ios-group">'
+      + '<div class="ios-row" onclick="openRituals()"><div class="icon-sq" style="background:var(--accent)">🌿</div><div class="row-content"><div class="row-text"><div class="row-title">Rituals</div><div class="person-rel">The rhythms you keep every year</div></div><div class="row-trail"><span class="row-when">'+ritualCount+'</span><span class="chev">'+ICON.chev+'</span></div></div></div>'
+      + '<div class="ios-row" onclick="openMemories()"><div class="icon-sq" style="background:var(--ink-faint)">📖</div><div class="row-content"><div class="row-text"><div class="row-title">Memories</div><div class="person-rel">What you\'ve already lived, kept safe</div></div><div class="row-trail"><span class="row-when">'+(memoryCount ? memoryCount+' kept' : 'None yet')+'</span><span class="chev">'+ICON.chev+'</span></div></div></div>'
+    + '</div></section>'
+    + '</main>';
+}
+
+function greeting(){
+  const h = new Date().getHours();
+  if(h<12) return 'Good morning';
+  if(h<18) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function monthOf(ev){
+  if(ev.dateType==='exact' && ev.date) return parseISO(ev.date).m;
+  if(ev.dateType==='period' && ev.periodMonth) return ev.periodMonth;
+  return null;
+}
+
+function pickNudge(season){
+  const candidates = state.items.filter(it=>it.dateType==='someday' && it.bestSeasonHint===season && !state.dismissedNudges.has(it.id));
+  if(!candidates.length) return null;
+  return candidates[0];
+}
+
+function renderNudge(item, season){
+  const names = peopleNames(item.personIds);
+  const who = names.length ? ' with '+names.join(' & ') : '';
+  return '<div class="nudge">'
+    + '<p>✨ You saved “'+esc(item.title)+'”'+esc(who)+'. '+SEASON_META[season].label+' could be a nice time for this — want to give it a season on the calendar?</p>'
+    + '<div class="actions">'
+    + '<button class="btn primary small" onclick="planNudge(\''+item.id+'\')">Give it a season</button>'
+    + '<button class="btn" onclick="dismissNudge(\''+item.id+'\')">Not yet</button>'
+    + '</div></div>';
+}
+window.dismissNudge = function(id){ state.dismissedNudges.add(id); render(); };
+window.planNudge = function(id){ startPlanning(id); };
+window.startPlanning = function(id){
+  openItemSheet({ mode:'edit', id });
+  if(state.sheet && state.sheet.draft.dateType==='someday'){
+    state.sheet.draft.dateType = 'period';
+    if(!state.sheet.draft.periodMonth) state.sheet.draft.periodMonth = todayDate().getMonth()+1;
+    renderSheet();
+  }
+};
+
+function renderEventSection(title, list, emptyMsg){
+  if(!list.length && !emptyMsg) return '';
+  return '<section class="block">'
+    + '<div class="block-head"><span class="block-title">'+esc(title)+'</span></div>'
+    + (list.length ? '<div class="ios-group">'+list.map(renderEventCard).join('')+'</div>' : '<div class="empty">'+esc(emptyMsg)+'</div>')
+    + '</section>';
+}
+
+function renderEventCard(ev){
+  const meta = getKindMeta(ev);
+  const colorVar = washVarFor(ev);
+  const names = peopleNames(ev.personIds);
+  let whenTag;
+  if(ev.dateType==='exact') whenTag = '<span class="tag strong" style="background:var('+colorVar+')">'+formatStamp(ev._nextDate)+'</span>';
+  else if(ev.dateType==='period') whenTag = '<span class="tag strong" style="background:var('+colorVar+')">'+esc(periodLabel(ev))+'</span>';
+  else whenTag = '<span class="tag">someday</span>';
+  const smeta = statusMetaFor(ev.kind);
+  const statusTag = ev.status && smeta[ev.status] ? '<span class="tag">'+smeta[ev.status].emoji+' '+smeta[ev.status].label+'</span>' : '';
+  const peopleTags = names.map(n=>'<span class="tag">'+esc(n)+'</span>').join('');
+  const dist = ev._daysUntil!==null ? roughDistance(ev._daysUntil) : '';
+  const openFn = ev.kind==='birthday' ? "goView('people')" : "openItemSheet({mode:'edit', id:'"+ev.id+"'})";
+  return '<div class="ios-row" onclick="'+openFn+'">'
+    + '<div class="icon-sq" style="background:var('+colorVar+')">'+meta.emoji+'</div>'
+    + '<div class="row-content">'
+    + '<div class="row-text"><div class="row-title">'+esc(ev.title)+'</div><div class="row-meta">'+whenTag+statusTag+peopleTags+'</div></div>'
+    + '<div class="row-trail">'+(dist ? '<span class="row-when">'+esc(dist)+'</span>' : '')+'<span class="chev">'+ICON.chev+'</span></div>'
+    + '</div></div>';
+}
+
+/* ============================== render: MEMORIES ============================== */
+
+function renderMemories(){
+  const completed = state.items.filter(it=>isCompletedFor(it.kind, it.status))
+    .slice()
+    .sort((a,b)=> (b.completedAt||'').localeCompare(a.completedAt||''));
+
+  const byYear = {};
+  completed.forEach(it=>{
+    const y = it.completedAt ? String(new Date(it.completedAt).getFullYear()) : 'Undated';
+    (byYear[y] = byYear[y] || []).push(it);
+  });
+  const years = Object.keys(byYear).sort((a,b)=> a==='Undated' ? 1 : b==='Undated' ? -1 : b-a);
+
+  const lead = '<button onclick="closeMemories()">'+ICON.chevBack+'<span>Home</span></button>';
+  return '<div class="navbar"><div class="navbar-lead">'+lead+'</div><span class="navbar-title">Memories</span></div>'
+    + '<div class="titleblock"><h1 class="page-title">📖 Memories</h1><p class="page-sub">Everything you’ve already lived, kept safe.</p></div>'
+    + '<main>'
+    + (years.length ? years.map(y=>'<section class="block"><div class="kicker">'+esc(y)+'</div><div class="ios-group">'+byYear[y].map(renderMemoryCard).join('')+'</div></section>').join('')
+      : '<div class="empty">Nothing kept yet — mark a gift as given or a plan as done, and it’ll be remembered here.</div>')
+    + '</main>';
+}
+
+function renderMemoryCard(it){
+  const meta = getKindMeta(it);
+  const colorVar = washVarFor(it);
+  const names = peopleNames(it.personIds);
+  const smeta = statusMetaFor(it.kind);
+  const statusTag = it.status && smeta[it.status] ? '<span class="tag strong" style="background:var('+colorVar+')">'+smeta[it.status].emoji+' '+smeta[it.status].label+'</span>' : '';
+  const dateTag = it.completedAt ? '<span class="row-when">'+formatFullDate(it.completedAt)+'</span>' : '';
+  return '<div class="ios-row" onclick="openItemSheet({mode:\'edit\', id:\''+it.id+'\'})">'
+    + '<div class="icon-sq" style="background:var('+colorVar+')">'+meta.emoji+'</div>'
+    + '<div class="row-content">'
+    + '<div class="row-text"><div class="row-title">'+esc(it.title)+'</div><div class="row-meta">'+statusTag+names.map(n=>'<span class="tag">'+esc(n)+'</span>').join('')+'</div>'
+    + (it.notes ? '<div class="form-footnote" style="padding:5px 0 0;">'+esc(it.notes)+'</div>' : '')
+    + '</div>'
+    + '<div class="row-trail">'+dateTag+'<span class="chev">'+ICON.chev+'</span></div>'
+    + '</div></div>';
+}
+
+/* ============================== render: YEAR ============================== */
+
+function renderYear(){
+  const season = currentSeason();
+  const events = allEvents().filter(e=>e.dateType!=='someday' && !isCompletedFor(e.kind, e.status));
+
+  const modeSwitch = '<div class="mode-switch">'
+    + '<button class="'+(state.yearMode==='seasons'?'active':'')+'" onclick="setYearMode(\'seasons\')">Seasons</button>'
+    + '<button class="'+(state.yearMode==='months'?'active':'')+'" onclick="setYearMode(\'months\')">Months</button>'
+    + '</div>';
+
+  const head = screenHead('Year', 'Your year ahead', 'Exact dates and loose seasons, side by side.', modeSwitch);
+
+  let main;
+  if(state.yearMode==='seasons'){
+    const order = rollFrom(SEASON_ORDER, SEASON_ORDER.indexOf(season));
+    main = order.map(s=>renderSeasonBlock(s, events, s===season)).join('');
+  } else {
+    const nowM = todayDate().getMonth()+1;
+    const monthsOrder = rollFrom([1,2,3,4,5,6,7,8,9,10,11,12], nowM-1);
+    main = monthsOrder.map(m=>renderMonthCard(m, events)).join('');
+  }
+  return head + '<main>' + main + '</main>';
+}
+
+function rollFrom(arr, startIdx){ return arr.slice(startIdx).concat(arr.slice(0,startIdx)); }
+window.setYearMode = function(m){ state.yearMode=m; render(); };
+
+function renderSeasonBlock(seasonKey, events, isCurrent){
+  const sm = SEASON_META[seasonKey];
+  const list = events.filter(e=>{
+    const mo = monthOf(e);
+    return mo && sm.months.includes(mo);
+  }).sort((a,b)=> (a._daysUntil??9999) - (b._daysUntil??9999));
+  return '<section class="block">'
+    + '<div class="season-strip"><span class="icon-sq" style="background:var('+sm.var+')">'+sm.emoji+'</span><h3>'+sm.label+(isCurrent?' · now':'')+'</h3><span class="range">'+sm.range+'</span></div>'
+    + (list.length ? '<div class="ios-group">'+list.map(renderEventCard).join('')+'</div>' : '<div class="empty">Nothing planned for '+sm.label.toLowerCase()+' yet.</div>')
+    + '</section>';
+}
+
+function renderMonthCard(m, events){
+  const list = events.filter(e=>monthOf(e)===m).sort((a,b)=>(a._daysUntil??9999)-(b._daysUntil??9999));
+  const open = state.openMonths.has(m);
+  return '<section class="block">'
+    + '<div class="ios-group">'
+    + '<div class="month-head" onclick="toggleMonth('+m+')"><h4>'+MONTHS[m-1]+'</h4><span class="month-count">'+(list.length? list.length+' saved' : '—')+'<span class="chev" style="transform:rotate('+(open?'90deg':'0')+')">'+ICON.chev+'</span></span></div>'
+    + (open ? (list.length? list.map(renderEventCard).join('') : '<div class="empty" style="border-top:0.5px solid var(--sep)">Nothing yet.</div>') : '')
+    + '</div></section>';
+}
+window.toggleMonth = function(m){ if(state.openMonths.has(m)) state.openMonths.delete(m); else state.openMonths.add(m); render(); };
+
+/* ============================== render: PEOPLE ============================== */
+
+function renderPeople(){
+  const head = screenHead('People', 'People', 'The people you want to keep showing up for.');
+  const sorted = state.people.slice().sort((a,b)=>{
+    const da = a.birthday ? daysBetween(todayDate(), nextOccurrenceMD(parseISO(a.birthday).m, parseISO(a.birthday).d)) : 9999;
+    const db_ = b.birthday ? daysBetween(todayDate(), nextOccurrenceMD(parseISO(b.birthday).m, parseISO(b.birthday).d)) : 9999;
+    return da-db_;
+  });
+  const rows = sorted.map(p=>{
+    const wash = avatarColorVar(p);
+    let next = '';
+    if(p.birthday){
+      const {m,d} = parseISO(p.birthday);
+      const nd = nextOccurrenceMD(m,d);
+      next = roughDistance(daysBetween(todayDate(), nd));
+    }
+    return '<div class="ios-row" onclick="openPerson(\''+p.id+'\')">'
+      + '<div class="avatar" style="width:36px;height:36px;font-size:14px;background:var('+wash+')">'+esc(initials(p.name))+'</div>'
+      + '<div class="row-content"><div class="row-text"><div class="row-title">'+esc(p.name)+'</div><div class="person-rel">'+esc(p.relationshipLabel||'')+'</div></div>'
+      + '<div class="row-trail">'+(next ? '<span class="row-when">🎂 '+esc(next)+'</span>' : '')+'<span class="chev">'+ICON.chev+'</span></div></div>'
+      + '</div>';
+  }).join('');
+  return head + '<main>'
+    + '<section class="block"><div class="ios-group">'+(rows || '<div class="empty">No one saved yet.</div>')+'</div></section>'
+    + '<div class="btn-row"><button class="btn primary block" onclick="openPersonSheet({mode:\'new\'})">+ Add a person</button></div>'
+    + '</main>';
+}
+
+window.openPerson = function(id){ state.personDetailId=id; render(); };
+
+function renderPersonDetail(id){
+  const p = personById(id);
+  if(!p){ state.personDetailId=null; return renderPeople(); }
+  const wash = avatarColorVar(p);
+  const linked = state.items.filter(it=>(it.personIds||[]).includes(id));
+  const memories = linked.filter(it=>isCompletedFor(it.kind, it.status));
+  const gifts = linked.filter(it=>it.kind==='gift' && it.status!=='given');
+  const giftsOpen = gifts;
+  const together = linked.filter(it=>it.kind!=='gift' && !isCompletedFor(it.kind, it.status));
+  const upcoming = allEvents().filter(e=>(e.personIds||[]).includes(id) && e._daysUntil!==null && e._daysUntil>=0 && !isCompletedFor(e.kind, e.status)).sort((a,b)=>a._daysUntil-b._daysUntil);
+
+  let next = '';
+  if(p.birthday){ const {m,d}=parseISO(p.birthday); next = formatStamp(nextOccurrenceMD(m,d)); }
+
+  const lead = '<button onclick="goView(\'people\')">'+ICON.chevBack+'<span>People</span></button>';
+  const trail = '<button onclick="openPersonSheet({mode:\'edit\', id:\''+p.id+'\'})">Edit</button>';
+
+  return '<div class="navbar"><div class="navbar-lead">'+lead+'</div><span class="navbar-title">'+esc(p.name)+'</span><div class="navbar-trail">'+trail+'</div></div>'
+    + '<div class="profile-block"><div class="avatar" style="background:var('+wash+')">'+esc(initials(p.name))+'</div>'
+    + '<h1>'+esc(p.name)+'</h1><div class="person-rel">'+esc(p.relationshipLabel||'')+(next?' · 🎂 '+next:'')+'</div></div>'
+    + '<main>'
+
+    + (upcoming.length ? '<section class="block"><div class="block-head"><span class="block-title">Upcoming with '+esc(firstName(p.name))+'</span></div><div class="ios-group">'+upcoming.map(renderEventCard).join('')+'</div></section>' : '')
+
+    + '<section class="block"><div class="block-head"><span class="block-title">Gift ideas</span><button class="btn small" onclick="openItemSheet({mode:\'new\', personId:\''+p.id+'\', kind:\'gift\'})">+ Add</button></div>'
+    + (giftsOpen.length ? '<div class="ios-group">'+giftsOpen.map(renderEventCard).join('')+'</div>' : '<div class="empty">No gift ideas saved yet.</div>')
+    + '</section>'
+
+    + '<section class="block"><div class="block-head"><span class="block-title">Things to do together</span><button class="btn small" onclick="openItemSheet({mode:\'new\', personId:\''+p.id+'\', kind:\'plan\'})">+ Add</button></div>'
+    + (together.length ? '<div class="ios-group">'+together.map(renderEventCard).join('')+'</div>' : '<div class="empty">Nothing saved yet — what would you love to do with '+esc(firstName(p.name))+'?</div>')
+    + '</section>'
+
+    + (memories.length ? '<section class="block"><div class="block-head"><span class="block-title">Memories with '+esc(firstName(p.name))+'</span></div><div class="ios-group">'+memories.map(renderMemoryCard).join('')+'</div></section>' : '')
+
+    + (p.likes ? '<section class="block"><div class="block-head"><span class="block-title">Things '+esc(firstName(p.name))+' likes</span></div><div class="ios-group"><div class="form-row" style="align-items:flex-start;padding:13px 16px;"><span style="font-size:15px;line-height:1.45;color:var(--ink);">'+esc(p.likes).replace(/\n/g,'<br>')+'</span></div></div></section>' : '')
+    + (p.notes ? '<section class="block"><div class="block-head"><span class="block-title">Notes</span></div><div class="ios-group"><div class="form-row" style="align-items:flex-start;padding:13px 16px;"><span style="font-size:15px;line-height:1.45;color:var(--ink);">'+esc(p.notes).replace(/\n/g,'<br>')+'</span></div></div></section>' : '')
+    + '</main>';
+}
+function firstName(n){ return (n||'').split(' ')[0]; }
+
+/* ============================== render: GIFTS ============================== */
+
+function renderGifts(){
+  const occ = christmasOccasion();
+  const monthsAway = monthsUntilChristmas();
+  const xmasGifts = state.items.filter(it=>it.kind==='gift' && it.occasion===occ);
+  const perPerson = state.people.map(p=>{
+    const g = xmasGifts.filter(it=>(it.personIds||[]).includes(p.id));
+    return { p, gifts:g };
+  });
+  const withoutPerson = xmasGifts.filter(it=>!(it.personIds||[]).length);
+  const sortedCount = perPerson.filter(x=>bestStatus(x.gifts)==='given'||bestStatus(x.gifts)==='wrapped'||bestStatus(x.gifts)==='bought'||bestStatus(x.gifts)==='chosen').length;
+
+  const otherGifts = state.items.filter(it=>it.kind==='gift' && it.occasion!==occ && it.status!=='given');
+  const byStatus = STATUS_ORDER.map(s=>({ s, list: otherGifts.filter(it=>it.status===s) })).filter(x=>x.list.length);
+
+  const headline = monthsAway<=4 ? 'Christmas '+christmasYear() : 'Gifts';
+  const sub = monthsAway<=4
+    ? (monthsAway<=0 ? 'It’s nearly here.' : monthsAway+' month'+(monthsAway===1?'':'s')+' to go — no rush, just steady thinking.')
+    : 'A quiet place for gift ideas whenever they come to you.';
+
+  const progress = state.people.length ? '<div class="progress-track"><div class="progress-fill" style="width:'+Math.round(100*sortedCount/state.people.length)+'%"></div></div>'
+      + '<p class="page-sub" style="margin-top:6px;font-size:13px;">'+sortedCount+' of '+state.people.length+' people have a direction so far.</p>' : '';
+
+  const rows = perPerson.map(({p,gifts})=>{
+    const wash = avatarColorVar(p);
+    const st = bestStatus(gifts);
+    const pill = st ? '<span class="status-pill">'+STATUS_META[st].emoji+' '+STATUS_META[st].label+(gifts.length>1?' ('+gifts.length+')':'')+'</span>'
+                     : '<span class="status-pill">💭 need an idea</span>';
+    return '<div class="ios-row" onclick="openChristmasFor(\''+p.id+'\')">'
+      + '<div class="avatar" style="width:34px;height:34px;font-size:13px;background:var('+wash+')">'+esc(initials(p.name))+'</div>'
+      + '<div class="row-content"><span class="row-title" style="font-size:15px;">'+esc(p.name)+'</span><div class="row-trail">'+pill+'<span class="chev">'+ICON.chev+'</span></div></div>'
+      + '</div>';
+  }).join('');
+
+  return screenHead('Gifts', '🎁 '+esc(headline), esc(sub), progress)
+    + '<main>'
+    + '<section class="block">'
+    + '<div class="ios-group">'+(rows || '<div class="empty">Add people first to plan gifts for them.</div>')+'</div>'
+    + (withoutPerson.length ? '<div class="ios-group">'+withoutPerson.map(renderEventCard).join('')+'</div>' : '')
+    + '</section>'
+    + '<section class="block"><div class="block-head"><span class="block-title">All other gift ideas</span><button class="btn small" onclick="openItemSheet({mode:\'new\', kind:\'gift\'})">+ Add</button></div>'
+    + (byStatus.length ? byStatus.map(({s,list})=>'<div class="kicker">'+STATUS_META[s].emoji+' '+STATUS_META[s].label+'</div><div class="ios-group">'+list.map(renderEventCard).join('')+'</div>').join('') : '<div class="empty">No other gift ideas yet — tap + to save one whenever it comes to you.</div>')
+    + '</section>'
+    + '</main>';
+}
+
+function bestStatus(gifts){
+  if(!gifts.length) return null;
+  let best=null, bi=-1;
+  gifts.forEach(g=>{ const i=STATUS_ORDER.indexOf(g.status||'idea'); if(i>bi){bi=i; best=g.status||'idea';} });
+  return best;
+}
+function monthsUntilChristmas(){
+  const now = todayDate(); const cy = christmasYear();
+  const xmas = new Date(cy,11,25);
+  return Math.round(daysBetween(now,xmas)/30.44);
+}
+window.openChristmasFor = function(personId){
+  const occ = christmasOccasion();
+  const existing = state.items.find(it=>it.kind==='gift' && it.occasion===occ && (it.personIds||[]).includes(personId));
+  if(existing) openItemSheet({ mode:'edit', id:existing.id });
+  else openItemSheet({ mode:'new', personId, kind:'gift', occasion:occ });
+};
+
+/* ============================== render: SOMEDAY ============================== */
+
+function renderRituals(){
+  const rituals = state.items.filter(it=>it.kind==='ritual');
+  const bySeasonRitual = SEASON_ORDER.map(s=>({ s, list: rituals.filter(r=>r.periodMonth && SEASON_META[s].months.includes(r.periodMonth)) }));
+  const lead = '<button onclick="closeRituals()">'+ICON.chevBack+'<span>Home</span></button>';
+  return '<div class="navbar"><div class="navbar-lead">'+lead+'</div><span class="navbar-title">Rituals</span></div>'
+    + '<div class="titleblock"><h1 class="page-title">\ud83c\udf3f Rituals</h1><p class="page-sub">The rhythms you keep every year, whether they\u2019re already tradition or ones you\u2019re starting.</p></div>'
+    + '<main>'
+    + '<section class="block"><div class="block-head"><span class="block-title">By season</span><button class="btn small" onclick="openItemSheet({mode:\'new\', kind:\'ritual\'})">+ Add</button></div>'
+    + bySeasonRitual.filter(x=>x.list.length).map(({s,list})=>{
+        const sm=SEASON_META[s];
+        return '<div class="kicker">'+sm.emoji+' '+sm.label+'</div><div class="ios-group">'+list.map(renderRitualCard).join('')+'</div>';
+      }).join('')
+    + (rituals.length ? '' : '<div class="empty">No rhythms yet \u2014 what do you want the year to repeat?</div>')
+    + '</section>'
+    + '</main>';
+}
+
+function renderIdeas(){
+  const filter = state.ideaFilter || 'all';
+  let ideas = state.items.filter(it=>it.dateType==='someday' && it.kind!=='gift' && !isCompletedFor(it.kind, it.status));
+  if(filter==='solo') ideas = ideas.filter(it=>!(it.personIds||[]).length);
+  else if(filter==='withPeople') ideas = ideas.filter(it=>(it.personIds||[]).length);
+
+  const trail = '<button onclick="openMemories()">Memories</button>';
+  const filterBar = '<div class="mode-switch">'
+    + '<button class="'+(filter==='all'?'active':'')+'" onclick="setIdeaFilter(\'all\')">All</button>'
+    + '<button class="'+(filter==='solo'?'active':'')+'" onclick="setIdeaFilter(\'solo\')">For me</button>'
+    + '<button class="'+(filter==='withPeople'?'active':'')+'" onclick="setIdeaFilter(\'withPeople\')">With people</button>'
+    + '</div>';
+
+  return screenHead('Someday', '\ud83c\udf3f Someday', 'Anything you\u2019d love to do one day \u2014 for yourself or with someone. Nothing here needs a date until you\u2019re ready.', filterBar, '', trail)
+    + '<main>'
+    + '<section class="block"><div class="block-head"><span class="block-title">'+(ideas.length ? ideas.length+' idea'+(ideas.length===1?'':'s') : 'Someday')+'</span><button class="btn small" onclick="openItemSheet({mode:\'new\', kind:\'idea\'})">+ Add</button></div>'
+    + (ideas.length ? '<div class="ios-group">'+ideas.map(renderIdeaRow).join('')+'</div>'
+      : '<div class="empty">'+(filter==='all' ? 'Nothing saved yet \u2014 jot down an idea whenever it comes to you.' : 'Nothing here yet with this filter.')+'</div>')
+    + '</section>'
+    + '</main>';
+}
+
+function renderIdeaRow(it){
+  const meta = getKindMeta(it);
+  const colorVar = washVarFor(it);
+  const names = peopleNames(it.personIds);
+  const peopleTags = names.length ? names.map(n=>'<span class="tag">'+esc(n)+'</span>').join('') : '<span class="tag">\ud83e\uddcd Just me</span>';
+  const hintTag = it.bestSeasonHint ? '<span class="tag strong" style="background:var('+colorVar+')">'+SEASON_META[it.bestSeasonHint].emoji+' '+SEASON_META[it.bestSeasonHint].label+'</span>' : '';
+  return '<div class="ios-row" onclick="openItemSheet({mode:\'edit\', id:\''+it.id+'\'})">'
+    + '<div class="icon-sq" style="background:var('+colorVar+')">'+meta.emoji+'</div>'
+    + '<div class="row-content"><div class="row-text"><div class="row-title">'+esc(it.title)+'</div><div class="row-meta">'+hintTag+peopleTags+'</div></div>'
+    + '<div class="row-trail"><button class="plan-btn" onclick="event.stopPropagation(); startPlanning(\''+it.id+'\')">Plan</button><span class="chev">'+ICON.chev+'</span></div>'
+    + '</div></div>';
+}
+
+function renderRitualCard(ev){
+  const meta = getKindMeta(ev);
+  const colorVar = washVarFor(ev);
+  const names = peopleNames(ev.personIds);
+  const rt = ev.ritualType ? RITUAL_TYPE_META[ev.ritualType].label : '';
+  return '<div class="ios-row" onclick="openItemSheet({mode:\'edit\', id:\''+ev.id+'\'})">'
+    + '<div class="icon-sq" style="background:var('+colorVar+')">'+meta.emoji+'</div>'
+    + '<div class="row-content"><div class="row-text"><div class="row-title">'+esc(ev.title)+'</div>'
+    + '<div class="row-meta">'+(ev.periodMonth?'<span class="tag strong" style="background:var('+colorVar+')">'+esc(periodLabel(ev))+'</span>':'')+(rt?'<span class="tag">'+esc(rt)+'</span>':'')+names.map(n=>'<span class="tag">'+esc(n)+'</span>').join('')+'</div></div>'
+    + '<span class="chev">'+ICON.chev+'</span></div></div>';
+}
+
+/* ============================== SHEETS ============================== */
+
+function renderSheet(){
+  const root = document.getElementById('sheet-root');
+  if(!state.sheet){ root.innerHTML=''; return; }
+  if(state.sheet.type==='capture' || state.sheet.type==='item') root.innerHTML = itemSheetHTML(state.sheet);
+  else if(state.sheet.type==='person') root.innerHTML = personSheetHTML(state.sheet);
+}
+
+function closeSheet(){ state.sheet=null; state.captureTouched=new Set(); renderSheet(); }
+window.closeSheet = closeSheet;
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSheet(); });
+
+/* ---------- capture / item sheet ---------- */
+
+window.openCapture = function(){
+  state.sheet = { type:'capture', draft:{ title:'', kind:'plan', personIds:[], dateType:'someday', periodMonth: todayDate().getMonth()+1, periodPrefix:'', recurYearly:false, occasion:'', status:'idea', budget:null, ritualType:'tradition', notes:'', bestSeasonHint:'' } };
+  state.captureTouched = new Set();
+  renderSheet();
+};
+
+window.openItemSheet = function(opts){
+  opts = opts || {};
+  if(opts.mode==='edit'){
+    const it = state.items.find(x=>x.id===opts.id);
+    if(!it) return;
+    state.sheet = { type:'item', mode:'edit', id:it.id, wasCompleted: isCompletedFor(it.kind, it.status), draft: Object.assign({ personIds:[], notes:'', occasion:'', status:'idea', ritualType:'tradition', periodPrefix:'', bestSeasonHint:'' }, it) };
+  } else {
+    state.sheet = { type:'item', mode:'new', draft:{
+      title:'', kind: opts.kind || 'plan',
+      personIds: opts.personId ? [opts.personId] : [],
+      dateType: opts.kind==='ritual' ? 'period' : (opts.occasion ? 'someday' : 'someday'),
+      periodMonth: todayDate().getMonth()+1, periodPrefix:'',
+      recurYearly: opts.kind==='ritual',
+      occasion: opts.occasion || '', status:'idea', budget:null, ritualType:'tradition', notes:'', bestSeasonHint:''
+    }};
+  }
+  renderSheet();
+};
+
+function statusPillsMarkup(kind, status){
+  const order = statusOrderFor(kind), meta = statusMetaFor(kind);
+  return order.map(s=>'<button type="button" class="opt'+(status===s?' active':'')+'" onclick="setDraft(\'status\',\''+s+'\')">'+meta[s].emoji+' '+meta[s].label+'</button>').join('');
+}
+
+function itemSheetHTML(sheet){
+  const d = sheet.draft;
+  const isCapture = sheet.type==='capture';
+  const title = isCapture ? 'Quick Capture' : (sheet.mode==='edit' ? 'Edit' : 'New '+(KIND_META[d.kind]?KIND_META[d.kind].label:'Entry'));
+
+  const kindPills = KIND_ORDER.map(k=>'<button type="button" class="opt'+(d.kind===k?' active':'')+'" onclick="setDraft(\'kind\',\''+k+'\')">'+KIND_META[k].emoji+' '+KIND_META[k].label+'</button>').join('');
+
+  const peopleChips = state.people.length ? state.people.map(p=>{
+    const active = (d.personIds||[]).includes(p.id);
+    const wash = avatarColorVar(p);
+    return '<button type="button" class="chip-select'+(active?' active':'')+'" onclick="togglePerson(\''+p.id+'\')"><span class="dot" style="background:var('+wash+')">'+esc(initials(p.name))+'</span>'+esc(p.name)+'</button>';
+  }).join('') : '<span class="form-footnote" style="padding:0;">No one saved yet — add people from the People tab.</span>';
+
+  const whenTabs = ['exact','period','someday'].map(w=>{
+    const lbl = w==='exact'?'Exact date':w==='period'?'A season':'Someday';
+    return '<button type="button" class="opt'+(d.dateType===w?' active':'')+'" onclick="setDraft(\'dateType\',\''+w+'\')">'+lbl+'</button>';
+  }).join('');
+
+  const monthOptions = MONTHS.map((m,i)=>'<option value="'+(i+1)+'" '+((d.periodMonth||0)===i+1?'selected':'')+'>'+m+'</option>').join('');
+  const seasonHintOptions = ['','winter','spring','summer','autumn'].map(s=>'<option value="'+s+'" '+((d.bestSeasonHint||'')===s?'selected':'')+'>'+(s?SEASON_META[s].emoji+' '+SEASON_META[s].label:'No hint')+'</option>').join('');
+  const prefixOptions = ['', 'early','mid','late'].map(pf=>'<option value="'+pf+'" '+((d.periodPrefix||'')===pf?'selected':'')+'>'+(pf||'—')+'</option>').join('');
+
+  const statusPills = statusPillsMarkup(d.kind, d.status);
+  const ritualPills = Object.keys(RITUAL_TYPE_META).map(rt=>'<button type="button" class="opt'+(d.ritualType===rt?' active':'')+'" onclick="setDraft(\'ritualType\',\''+rt+'\')">'+RITUAL_TYPE_META[rt].label+'</button>').join('');
+
+  return '<div class="backdrop" onclick="closeSheet()"></div>'
+  + '<div class="sheet" role="dialog" aria-modal="true">'
+  + '<div class="sheet-handle"></div>'
+  + '<div class="sheet-head"><button class="navbtn plain" onclick="closeSheet()">Cancel</button><h2>'+esc(title)+'</h2><button class="navbtn strong" onclick="submitItemSheet()">'+(sheet.mode==='edit'?'Save':'Add')+'</button></div>'
+  + '<div class="sheet-body">'
+
+  + (isCapture ? '<div class="form-header">What’s on your mind</div><div class="ios-group"><div class="title-row"><textarea id="f-raw" placeholder="e.g. Gift idea for Mum: pottery class" onblur="handleParseBlur()">'+esc(d.title)+'</textarea></div></div>'
+      + '<div class="form-footnote">Write it naturally — I’ll guess the details below, all editable.</div>' : '')
+
+  + '<div class="ios-group"><div class="title-row"><input id="f-title" type="text" value="'+esc(d.title)+'" placeholder="Title" oninput="markTouched(\'title\')"></div></div>'
+
+  + '<div class="form-header">Kind</div><div class="pillgroup" id="f-kind-group">'+kindPills+'</div>'
+
+  + '<div class="form-header">Who’s it for</div><div class="chiprow">'+peopleChips+'</div>'
+
+  + '<div class="form-header">When</div><div class="when-tabs">'+whenTabs+'</div>'
+    + '<div class="when-pane'+(d.dateType==='exact'?' show':'')+'" id="pane-exact"><div class="ios-group">'
+      + '<div class="form-row"><span class="flabel">Date</span><input id="f-date" type="date" value="'+esc(d.date||'')+'" onchange="markTouched(\'dateType\')"></div>'
+      + '<div class="form-row switchrow"><span class="flabel">Repeats every year</span><input type="checkbox" class="ios-switch" id="f-recur-exact" onchange="markTouched(\'recur\')" '+(d.recurYearly?'checked':'')+'></div>'
+      + '</div></div>'
+    + '<div class="when-pane'+(d.dateType==='period'?' show':'')+'" id="pane-period"><div class="ios-group">'
+      + '<div class="form-row"><span class="flabel">Roughly when</span><div class="row2"><select id="f-prefix" onchange="markTouched(\'dateType\')">'+prefixOptions+'</select><select id="f-month" onchange="markTouched(\'dateType\')">'+monthOptions+'</select></div></div>'
+      + '<div class="form-row switchrow"><span class="flabel">Repeats every year</span><input type="checkbox" class="ios-switch" id="f-recur-period" onchange="markTouched(\'recur\')" '+(d.recurYearly!==false?'checked':'')+'></div>'
+      + '</div></div>'
+    + '<div class="when-pane'+(d.dateType==='someday'?' show':'')+'" id="pane-someday"><div class="ios-group"><div class="form-row"><span class="flabel">Best season, maybe</span><select id="f-hint">'+seasonHintOptions+'</select></div></div></div>'
+
+  + '<div class="form-header">Occasion <span style="text-transform:none;font-weight:400;color:var(--ink-faint)">(optional)</span></div>'
+  + '<div class="ios-group"><div class="form-row"><input id="f-occasion" type="text" style="text-align:left;" value="'+esc(d.occasion||'')+'" placeholder="e.g. Christmas '+christmasYear()+', Birthday"></div></div>'
+
+  + '<div id="status-extra" style="display:'+(d.kind==='ritual'?'none':'block')+';">'
+    + '<div class="form-header">Status</div><div class="pillgroup" id="f-status-group">'+statusPills+'</div>'
+  + '</div>'
+
+  + '<div id="budget-extra" style="display:'+(d.kind==='gift'?'block':'none')+';">'
+    + '<div class="form-header">Budget <span style="text-transform:none;font-weight:400;color:var(--ink-faint)">(optional)</span></div>'
+    + '<div class="ios-group"><div class="form-row"><span class="flabel">Approx.</span><input id="f-budget" type="number" min="0" step="1" value="'+(d.budget??'')+'" placeholder="€"></div></div>'
+  + '</div>'
+
+  + '<div id="ritual-extra" style="display:'+(d.kind==='ritual'?'block':'none')+';">'
+    + '<div class="form-header">What kind of rhythm</div><div class="pillgroup" id="f-ritual-group">'+ritualPills+'</div>'
+  + '</div>'
+
+  + '<div class="form-header">Notes</div><div class="ios-group"><div class="notes-row"><textarea id="f-notes" placeholder="Any detail worth remembering">'+esc(d.notes||'')+'</textarea></div></div>'
+
+  + (sheet.mode==='edit' ? '<div class="ios-group" style="margin-top:26px;"><div class="form-row delete-row"><button onclick="handleDeleteItem()">Delete</button></div></div>' : '')
+
+  + '</div></div>';
+}
+
+function refreshKindDependentUI(kind){
+  document.getElementById('status-extra').style.display = kind==='ritual' ? 'none':'block';
+  document.getElementById('budget-extra').style.display = kind==='gift' ? 'block':'none';
+  document.getElementById('ritual-extra').style.display = kind==='ritual' ? 'block':'none';
+  const validOrder = statusOrderFor(kind);
+  if(!validOrder.includes(state.sheet.draft.status)) state.sheet.draft.status = 'idea';
+  const statusGroup = document.getElementById('f-status-group');
+  if(statusGroup) statusGroup.innerHTML = statusPillsMarkup(kind, state.sheet.draft.status);
+}
+
+window.setDraft = function(field, value){
+  state.sheet.draft[field] = value;
+  state.captureTouched.add(field);
+  // toggle conditional sections + active pill classes without full re-render (preserve focus/scroll)
+  if(field==='kind'){
+    document.querySelectorAll('#f-kind-group .opt').forEach(b=>b.classList.remove('active'));
+    refreshKindDependentUI(value);
+    event.target.classList.add('active');
+  }
+  if(field==='status'){ document.querySelectorAll('#f-status-group .opt').forEach(b=>b.classList.remove('active')); event.target.classList.add('active'); }
+  if(field==='ritualType'){ document.querySelectorAll('#f-ritual-group .opt').forEach(b=>b.classList.remove('active')); event.target.classList.add('active'); }
+  if(field==='dateType'){
+    document.querySelectorAll('.when-tabs .opt').forEach(b=>b.classList.remove('active'));
+    event.target.classList.add('active');
+    ['exact','period','someday'].forEach(w=>{ document.getElementById('pane-'+w).classList.toggle('show', w===value); });
+  }
+};
+
+window.togglePerson = function(id){
+  const set = new Set(state.sheet.draft.personIds||[]);
+  if(set.has(id)) set.delete(id); else set.add(id);
+  state.sheet.draft.personIds = Array.from(set);
+  state.captureTouched.add('personIds');
+  event.currentTarget.classList.toggle('active');
+};
+
+/* Marks a capture field as manually edited so a later re-parse of the raw note
+   (handleParseBlur) never overwrites it. Without this, typing a correction into
+   Title and then tapping back into the quick-capture note silently reverted it. */
+window.markTouched = function(field){ state.captureTouched.add(field); };
+
+window.handleParseBlur = function(){
+  const text = document.getElementById('f-raw').value;
+  if(!text.trim()) return;
+  const parsed = parseCapture(text);
+  const t = state.captureTouched;
+  if(!t.has('title')) document.getElementById('f-title').value = parsed.title;
+  if(!t.has('kind')){
+    state.sheet.draft.kind = parsed.kind;
+    document.querySelectorAll('#f-kind-group .opt').forEach(b=>b.classList.remove('active'));
+    const idx = KIND_ORDER.indexOf(parsed.kind);
+    if(idx>=0) document.querySelectorAll('#f-kind-group .opt')[idx].classList.add('active');
+    refreshKindDependentUI(parsed.kind);
+  }
+  if(!t.has('personIds') && parsed.personIds.length){
+    state.sheet.draft.personIds = parsed.personIds;
+    document.querySelectorAll('.chip-select').forEach((el,i)=>{
+      const p = state.people[i]; if(p && parsed.personIds.includes(p.id)) el.classList.add('active');
+    });
+  }
+  if(!t.has('dateType')){
+    state.sheet.draft.dateType = parsed.dateType;
+    document.querySelectorAll('.when-tabs .opt').forEach(b=>b.classList.remove('active'));
+    const order=['exact','period','someday']; const idx=order.indexOf(parsed.dateType);
+    if(idx>=0) document.querySelectorAll('.when-tabs .opt')[idx].classList.add('active');
+    order.forEach(w=>document.getElementById('pane-'+w).classList.toggle('show', w===parsed.dateType));
+    if(parsed.dateType==='exact' && parsed.date) document.getElementById('f-date').value = parsed.date;
+    if(parsed.dateType==='period' && parsed.periodMonth){
+      document.getElementById('f-month').value = parsed.periodMonth;
+      document.getElementById('f-prefix').value = parsed.periodPrefix||'';
+    }
+  }
+  if(parsed.recurYearly && !t.has('recur')){
+    const rc = document.getElementById('f-recur-exact'); if(rc) rc.checked = true;
+    const rp = document.getElementById('f-recur-period'); if(rp) rp.checked = true;
+  }
+  toast('Guessed a few details — check them below');
+};
+
+async function submitItemSheet(){
+  const sheet = state.sheet;
+  const d = sheet.draft;
+  const title = (document.getElementById('f-title').value||'').trim();
+  if(!title){ toast('Give it a short title first'); return; }
+  const kind = d.kind;
+  const dateType = d.dateType;
+  const payload = {
+    title, kind,
+    personIds: d.personIds||[],
+    dateType,
+    occasion: (document.getElementById('f-occasion').value||'').trim(),
+    notes: (document.getElementById('f-notes').value||'').trim(),
+  };
+  if(dateType==='exact'){
+    payload.date = document.getElementById('f-date').value || null;
+    payload.recurYearly = !!document.getElementById('f-recur-exact').checked;
+    payload.periodMonth = null; payload.bestSeasonHint = '';
+  } else if(dateType==='period'){
+    payload.periodMonth = parseInt(document.getElementById('f-month').value,10);
+    payload.periodPrefix = document.getElementById('f-prefix').value||'';
+    payload.recurYearly = !!document.getElementById('f-recur-period').checked;
+    payload.date = null; payload.bestSeasonHint = '';
+  } else {
+    payload.bestSeasonHint = document.getElementById('f-hint').value||'';
+    payload.date = null; payload.periodMonth = null; payload.recurYearly = false; payload.periodPrefix='';
+  }
+  if(kind==='ritual'){ payload.status = null; }
+  else { payload.status = d.status || 'idea'; }
+  if(kind==='gift'){
+    const b = document.getElementById('f-budget').value;
+    payload.budget = b ? Number(b) : null;
+  } else { payload.budget = null; }
+  if(kind==='ritual'){ payload.ritualType = d.ritualType || 'tradition'; } else { payload.ritualType = null; }
+
+  const nowCompleted = isCompletedFor(kind, payload.status);
+  const wasCompleted = !!sheet.wasCompleted;
+  if(nowCompleted && !wasCompleted) payload.completedAt = new Date().toISOString();
+  else if(!nowCompleted) payload.completedAt = null;
+
+  if(!payload.date) delete payload.date;
+  if(!payload.periodMonth) delete payload.periodMonth;
+
+  if(sheet.mode==='edit'){ await updateItem(sheet.id, payload); toast(nowCompleted && !wasCompleted ? 'Saved to memories' : 'Saved'); }
+  else { await addItem(payload); toast('Added to your almanac'); }
+  closeSheet();
+}
+window.submitItemSheet = submitItemSheet;
+
+window.handleDeleteItem = async function(){
+  const id = state.sheet.id;
+  await deleteItem(id);
+  toast('Removed');
+  closeSheet();
+};
+
+/* ---------- person sheet ---------- */
+
+window.openPersonSheet = function(opts){
+  if(opts.mode==='edit'){
+    const p = personById(opts.id);
+    state.sheet = { type:'person', mode:'edit', id:p.id, draft: Object.assign({ circle:'family' }, p) };
+  } else {
+    state.sheet = { type:'person', mode:'new', draft:{ name:'', relationshipLabel:'', circle:'family', birthday:'', likes:'', notes:'' } };
+  }
+  renderSheet();
+};
+
+function personSheetHTML(sheet){
+  const d = sheet.draft;
+  const circlePills = ['family','friend'].map(c=>'<button type="button" class="opt'+(d.circle===c?' active':'')+'" onclick="setDraft(\'circle\',\''+c+'\')">'+(c==='family'?'👨‍👩‍👧 Family':'❤️ Friend')+'</button>').join('');
+  return '<div class="backdrop" onclick="closeSheet()"></div>'
+  + '<div class="sheet" role="dialog" aria-modal="true">'
+  + '<div class="sheet-handle"></div>'
+  + '<div class="sheet-head"><button class="navbtn plain" onclick="closeSheet()">Cancel</button><h2>'+(sheet.mode==='edit'?'Edit Person':'New Person')+'</h2><button class="navbtn strong" onclick="submitPersonSheet()">'+(sheet.mode==='edit'?'Save':'Add')+'</button></div>'
+  + '<div class="sheet-body">'
+  + '<div class="ios-group">'
+  + '<div class="form-row"><span class="flabel">Name</span><input id="pf-name" type="text" value="'+esc(d.name)+'" placeholder="e.g. Mum"></div>'
+  + '<div class="form-row"><span class="flabel">Relationship</span><input id="pf-rel" type="text" value="'+esc(d.relationshipLabel||'')+'" placeholder="e.g. Mum"></div>'
+  + '<div class="form-row"><span class="flabel">Birthday</span><input id="pf-bday" type="date" value="'+esc(d.birthday||'')+'"></div>'
+  + '</div>'
+  + '<div class="form-header">Circle</div><div class="pillgroup" id="f-kind-group">'+circlePills+'</div>'
+  + '<div class="form-header">Things they like</div><div class="ios-group"><div class="notes-row"><textarea id="pf-likes" placeholder="Hobbies, favourites, hints they’ve dropped…">'+esc(d.likes||'')+'</textarea></div></div>'
+  + '<div class="form-header">Notes</div><div class="ios-group"><div class="notes-row"><textarea id="pf-notes" placeholder="Anything else worth remembering">'+esc(d.notes||'')+'</textarea></div></div>'
+  + (sheet.mode==='edit' ? '<div class="ios-group" style="margin-top:26px;"><div class="form-row delete-row"><button onclick="handleDeletePerson()">Delete</button></div></div>' : '')
+  + '</div></div>';
+}
+
+async function submitPersonSheet(){
+  const sheet = state.sheet;
+  const name = (document.getElementById('pf-name').value||'').trim();
+  if(!name){ toast('Give them a name first'); return; }
+  const payload = {
+    name,
+    relationshipLabel: (document.getElementById('pf-rel').value||'').trim(),
+    circle: sheet.draft.circle||'family',
+    birthday: document.getElementById('pf-bday').value || null,
+    likes: (document.getElementById('pf-likes').value||'').trim(),
+    notes: (document.getElementById('pf-notes').value||'').trim(),
+  };
+  if(!payload.birthday) delete payload.birthday;
+  if(sheet.mode==='edit'){ await updatePerson(sheet.id, payload); toast('Saved'); }
+  else { const id = await addPerson(payload); toast('Added'); state.personDetailId=id; state.view='people'; }
+  closeSheet();
+}
+window.submitPersonSheet = submitPersonSheet;
+
+window.handleDeletePerson = async function(){
+  const id = state.sheet.id;
+  await deletePerson(id);
+  state.personDetailId = null; state.view='people';
+  toast('Removed');
+  closeSheet();
+};
+
+/* ============================== boot ============================== */
+
+initStore();
+render();
+
+})();
+</script>
